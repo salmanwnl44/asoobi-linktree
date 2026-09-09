@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   AsoobiProfileDocument, 
   ProfileThemeConfig, 
@@ -27,7 +27,8 @@ import {
   Waves,
   Grid,
   Box,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Search
 } from "lucide-react";
 import { CURATED_PLATFORM_THEMES } from "@/lib/blockTemplates";
 import { 
@@ -59,6 +60,140 @@ interface ThemeAndStylingPanelProps {
   onDeselectBlock?: () => void;
 }
 
+// Exact color theme matching each pattern box thumbnail
+export const PATTERN_THEME_MAP: Record<
+  BackgroundPatternType,
+  {
+    bg: string;
+    cardBg: string;
+    accent: string;
+    text: string;
+    secondaryText: string;
+    border: string;
+  }
+> = {
+  canvas_constellation: {
+    bg: "#FAF7EE",
+    cardBg: "#FFFFFF",
+    accent: "#D4AF37",
+    text: "#1A1C20",
+    secondaryText: "#918355",
+    border: "#E5E0D2",
+  },
+  canvas_aurora_waves: {
+    bg: "#EBFBF5",
+    cardBg: "#FFFFFF",
+    accent: "#10B981",
+    text: "#0F291E",
+    secondaryText: "#3A7D63",
+    border: "#CEF0E2",
+  },
+  canvas_stardust: {
+    bg: "#FFF9F2",
+    cardBg: "#FFFFFF",
+    accent: "#F59E0B",
+    text: "#2B1D0C",
+    secondaryText: "#9A7138",
+    border: "#F7E6D0",
+  },
+  dot_grid: {
+    bg: "#FAF9F5",
+    cardBg: "#FFFFFF",
+    accent: "#D4AF37",
+    text: "#1A1C20",
+    secondaryText: "#8F8155",
+    border: "#E8E2D5",
+  },
+  isometric_grid: {
+    bg: "#F0F7FB",
+    cardBg: "#FFFFFF",
+    accent: "#0284C7",
+    text: "#0C2338",
+    secondaryText: "#42769E",
+    border: "#D0E5F2",
+  },
+  gradient_mesh: {
+    bg: "#FFF5F5",
+    cardBg: "#FFFFFF",
+    accent: "#F43F5E",
+    text: "#2B1117",
+    secondaryText: "#964556",
+    border: "#FED7DE",
+  },
+  gradient_radial: {
+    bg: "#FFFDF5",
+    cardBg: "#FFFFFF",
+    accent: "#F59E0B",
+    text: "#281D0A",
+    secondaryText: "#96753A",
+    border: "#FBECC4",
+  },
+  iridescent_hologram: {
+    bg: "#FAF8FF",
+    cardBg: "#FFFFFF",
+    accent: "#8B5CF6",
+    text: "#1F1638",
+    secondaryText: "#7C6A9E",
+    border: "#E6DDFA",
+  },
+  floating_bubbles: {
+    bg: "#FDFBF7",
+    cardBg: "#FFFFFF",
+    accent: "#F472B6",
+    text: "#291522",
+    secondaryText: "#995C85",
+    border: "#F7E0EE",
+  },
+  neon_horizon: {
+    bg: "#FFF3EC",
+    cardBg: "#FFFFFF",
+    accent: "#FB923C",
+    text: "#33180B",
+    secondaryText: "#A05F37",
+    border: "#FED7C2",
+  },
+  liquid_marble: {
+    bg: "#FFF1EB",
+    cardBg: "#FFFFFF",
+    accent: "#EC4899",
+    text: "#2E1322",
+    secondaryText: "#99557C",
+    border: "#FED1E4",
+  },
+  art_deco_lattice: {
+    bg: "#FDFBF5",
+    cardBg: "#FFFFFF",
+    accent: "#D4AF37",
+    text: "#1C1B18",
+    secondaryText: "#8C8360",
+    border: "#EAE3CD",
+  },
+  cyber_matrix: {
+    bg: "#F0FDF4",
+    cardBg: "#FFFFFF",
+    accent: "#059669",
+    text: "#0E291C",
+    secondaryText: "#357A59",
+    border: "#C7F2DC",
+  },
+  subtle_noise: {
+    bg: "#F6F2E9",
+    cardBg: "#FFFFFF",
+    accent: "#918355",
+    text: "#242017",
+    secondaryText: "#7E7358",
+    border: "#E0D7C5",
+  },
+  solid_block: {
+    bg: "#FAF9F5",
+    cardBg: "#FFFFFF",
+    accent: "#D4AF37",
+    text: "#1A1C20",
+    secondaryText: "#918355",
+    border: "#E5E0D2",
+  },
+};
+
 export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
   profile,
   setProfile,
@@ -75,10 +210,27 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
   };
 
   const [isFineTuningCard, setIsFineTuningCard] = useState(false);
+  const [isCardPresetDropdownOpen, setIsCardPresetDropdownOpen] = useState(false);
+  const cardDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (cardDropdownRef.current && !cardDropdownRef.current.contains(e.target as Node)) {
+        setIsCardPresetDropdownOpen(false);
+      }
+    };
+    if (isCardPresetDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isCardPresetDropdownOpen]);
 
   const theme = profile.theme;
   const palette = theme.palette;
   const currentCardDesign = profile.cardDesign || DEFAULT_CARD_DESIGN;
+  const activePreset = CARD_DESIGN_PRESETS.find((p) => p.id === currentCardDesign.presetId) || CARD_DESIGN_PRESETS[0];
 
   // Update theme helper
   const updateTheme = (updater: (prev: ProfileThemeConfig) => ProfileThemeConfig) => {
@@ -132,6 +284,36 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
         particleSpeed: typeof t.backgroundConfig?.particleSpeed === "number" ? t.backgroundConfig.particleSpeed : 1,
         ...updater,
       },
+    }));
+  };
+
+  // Select pattern and instantly synchronize the matching background color and accent
+  const selectPatternWithThemeColors = (patternId: BackgroundPatternType) => {
+    const patternTheme = PATTERN_THEME_MAP[patternId] || PATTERN_THEME_MAP.canvas_constellation;
+    setProfile((prev) => ({
+      ...prev,
+      theme: {
+        ...prev.theme,
+        palette: {
+          ...prev.theme.palette,
+          background: patternTheme.bg,
+          accentGold: patternTheme.accent,
+          border: patternTheme.border,
+          primaryText: patternTheme.text,
+          secondaryText: patternTheme.secondaryText,
+          cardBackground: patternTheme.cardBg,
+          buttonBackground: patternTheme.accent,
+        },
+        backgroundConfig: {
+          type: patternId,
+          patternColor: patternTheme.accent,
+          patternOpacity: typeof prev.theme.backgroundConfig?.patternOpacity === "number" ? prev.theme.backgroundConfig.patternOpacity : 0.75,
+          particleSpeed: typeof prev.theme.backgroundConfig?.particleSpeed === "number" ? prev.theme.backgroundConfig.particleSpeed : 1,
+        },
+      },
+      cardDesign: prev.cardDesign
+        ? { ...prev.cardDesign, accentColor: patternTheme.accent }
+        : prev.cardDesign,
     }));
   };
 
@@ -255,13 +437,29 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
       {(activeSubTab === "all" || activeSubTab === "colors") && (
         <div className="space-y-2.5">
           <div className="flex items-center justify-between text-xs font-bold text-[#1A1C20]">
-            <span>Theme Presets</span>
-            <span className="text-[10px] text-[#918355] font-normal">Click to apply palette</span>
+            <div className="flex items-center gap-2">
+              <span>Theme Presets</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#D4AF37]/15 text-[#918355]">
+                {CURATED_PLATFORM_THEMES.length} Aesthetic Styles
+              </span>
+            </div>
+            <span className="text-[10px] text-[#918355] font-normal">Scroll to explore • 1-Click apply</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[300px] overflow-y-auto pr-1">
             {CURATED_PLATFORM_THEMES.map((themePreset) => {
               const isSelected = theme.id === themePreset.id;
+              const tag = 
+                themePreset.id.includes("gold") || themePreset.id.includes("money") || themePreset.id.includes("alabaster") 
+                  ? "Classic" 
+                  : themePreset.id.includes("rose") || themePreset.id.includes("vanilla") || themePreset.id.includes("lavender") || themePreset.id.includes("sunset") 
+                  ? "Aesthetic" 
+                  : themePreset.id.includes("monograph") || themePreset.id.includes("espresso") || themePreset.id.includes("terracotta") 
+                  ? "Editorial" 
+                  : themePreset.id.includes("azur") || themePreset.id.includes("matcha") || themePreset.id.includes("sage") 
+                  ? "Serene" 
+                  : "Velvet";
+
               return (
                 <button
                   key={themePreset.id}
@@ -278,37 +476,44 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
                         : p.cardDesign,
                     }))
                   }
-                  className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 group ${
+                  className={`p-2.5 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between gap-2 group cursor-pointer relative ${
                     isSelected
-                      ? "border-[#D4AF37] bg-amber-50/50 shadow-xs ring-1 ring-[#D4AF37]/40"
-                      : "border-[#E5E0D2] bg-white hover:border-[#D4AF37]/50"
+                      ? "border-[#D4AF37] bg-amber-50/60 shadow-xs ring-1.5 ring-[#D4AF37]"
+                      : "border-[#E5E0D2] bg-white hover:border-[#D4AF37]/60 hover:shadow-2xs"
                   }`}
                 >
+                  <div className="flex items-start justify-between gap-1 w-full">
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-[#F4F3ED] text-[#918355] group-hover:bg-[#D4AF37]/15 group-hover:text-[#918355] transition-colors">
+                      {tag}
+                    </span>
+
+                    {/* 3 Color Dots */}
+                    <div className="flex items-center -space-x-1 shrink-0">
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/10 shadow-2xs"
+                        style={{ backgroundColor: themePreset.palette.accentGold }}
+                        title="Accent"
+                      />
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/10 shadow-2xs"
+                        style={{ backgroundColor: themePreset.palette.background }}
+                        title="Background"
+                      />
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/10 shadow-2xs"
+                        style={{ backgroundColor: themePreset.palette.buttonBackground || themePreset.palette.cardBackground }}
+                        title="Button/Contrast"
+                      />
+                    </div>
+                  </div>
+
                   <div className="min-w-0">
                     <div className="text-xs font-bold text-[#1A1C20] truncate group-hover:text-[#D4AF37] transition-colors">
                       {themePreset.name}
                     </div>
-                    <div className="text-[9px] text-[#918355] truncate font-medium">
+                    <div className="text-[10px] text-[#918355] truncate font-medium mt-0.5">
                       {themePreset.typography.headingFont}
                     </div>
-                  </div>
-
-                  <div className="flex items-center -space-x-1 shrink-0">
-                    <span
-                      className="w-3.5 h-3.5 rounded-full border border-black/10 shadow-xs"
-                      style={{ backgroundColor: themePreset.palette.accentGold }}
-                      title="Accent"
-                    />
-                    <span
-                      className="w-3.5 h-3.5 rounded-full border border-black/10 shadow-xs"
-                      style={{ backgroundColor: themePreset.palette.background }}
-                      title="Background"
-                    />
-                    <span
-                      className="w-3.5 h-3.5 rounded-full border border-black/10 shadow-xs"
-                      style={{ backgroundColor: themePreset.palette.buttonBackground || themePreset.palette.cardBackground }}
-                      title="Button/Contrast"
-                    />
                   </div>
                 </button>
               );
@@ -369,8 +574,8 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
             <span className="text-[10px] text-[#918355] font-semibold">60fps Simulation</span>
           </div>
 
-          {/* Pattern Chips Grid with Height and Live Animations */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {/* Pattern Chips Scrollable 3x3 Grid with Live Light & Colorful Animations */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[276px] overflow-y-auto pr-1">
             {[
               { id: "canvas_constellation", label: "Constellation", icon: "✨", tag: "GSAP / 3JS" },
               { id: "canvas_aurora_waves", label: "Aurora Waves", icon: "🌊", tag: "Fluid" },
@@ -379,6 +584,12 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
               { id: "isometric_grid", label: "Isometric Grid", icon: "📐", tag: "Blueprint" },
               { id: "gradient_mesh", label: "Fluid Mesh Glow", icon: "🌈", tag: "Ambient" },
               { id: "gradient_radial", label: "Radial Spotlight", icon: "🔦", tag: "Focus" },
+              { id: "iridescent_hologram", label: "Iridescent Prism", icon: "💎", tag: "Prismatic" },
+              { id: "floating_bubbles", label: "Floating Orbs", icon: "🫧", tag: "Bokeh" },
+              { id: "neon_horizon", label: "Sunset Horizon", icon: "🌅", tag: "Twilight" },
+              { id: "liquid_marble", label: "Liquid Marble", icon: "🏛", tag: "Organic" },
+              { id: "art_deco_lattice", label: "Art Deco Lattice", icon: "⚜️", tag: "Vintage" },
+              { id: "cyber_matrix", label: "Cyber Matrix", icon: "⚡", tag: "Digital" },
               { id: "subtle_noise", label: "Analog Film Grain", icon: "🎞", tag: "Paper" },
               { id: "solid_block", label: "Solid Clean Block", icon: "⬛", tag: "Clean" },
             ].map((p) => (
@@ -390,7 +601,7 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
                 tag={p.tag}
                 isSelected={currentBgConfig.type === p.id}
                 accentColor={palette.accentGold}
-                onClick={() => updateBackground({ type: p.id as BackgroundPatternType })}
+                onClick={() => selectPatternWithThemeColors(p.id as BackgroundPatternType)}
               />
             ))}
           </div>
@@ -452,6 +663,7 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
               label="Heading Font"
               value={theme.typography.headingFont}
               options={HEADING_FONT_OPTIONS}
+              align="left"
               onChange={(id) => updateTypography({ headingFont: id as HeadingFontFamily })}
             />
 
@@ -460,6 +672,7 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
               label="Body Font"
               value={theme.typography.bodyFont}
               options={BODY_FONT_OPTIONS}
+              align="right"
               onChange={(id) => updateTypography({ bodyFont: id as BodyFontFamily })}
             />
           </div>
@@ -533,25 +746,43 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
             </button>
           </div>
 
-          {/* Button Style Chips */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-            {BUTTON_STYLE_OPTIONS.map((bStyle) => {
-              const isSelected = (theme.geometry.buttonStyle || "solid") === bStyle.id;
-              return (
-                <button
-                  key={bStyle.id}
-                  type="button"
-                  onClick={() => updateGeometry({ buttonStyle: bStyle.id })}
-                  className={`py-1.5 px-2.5 rounded-xl border text-xs font-bold transition-all truncate ${
-                    isSelected
-                      ? "bg-[#D4AF37] text-white border-[#D4AF37] shadow-2xs"
-                      : "bg-[#FAF9F5] border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
-                  }`}
-                >
-                  {bStyle.name.split(" ")[0]}
-                </button>
-              );
-            })}
+          {/* Button Style Scrollable 2x4 Area with Real Live Button Rendering */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#1A1C20]">
+              <span>Button Geometry & Surface Styles</span>
+              <span className="text-[10px] text-[#918355] font-normal">Scrollable 2×4 Area • {BUTTON_STYLE_OPTIONS.length} Styles</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-[146px] overflow-y-auto p-1 pr-1.5">
+              {BUTTON_STYLE_OPTIONS.map((bStyle) => {
+                const isSelected = (theme.geometry.buttonStyle || "solid") === bStyle.id;
+                const buttonStyle = getProfileButtonStyles({
+                  ...theme,
+                  geometry: {
+                    ...theme.geometry,
+                    buttonStyle: bStyle.id,
+                  },
+                });
+
+                return (
+                  <button
+                    key={bStyle.id}
+                    type="button"
+                    onClick={() => updateGeometry({ buttonStyle: bStyle.id })}
+                    style={buttonStyle}
+                    className={`h-11 px-2.5 flex items-center justify-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer select-none active:scale-95 ${
+                      isSelected
+                        ? "ring-2 ring-[#D4AF37] ring-offset-2 ring-offset-white scale-[1.02] z-10 shadow-sm"
+                        : "opacity-90 hover:opacity-100 hover:scale-[1.01]"
+                    }`}
+                    title={bStyle.description}
+                  >
+                    {isSelected && <Check className="w-3 h-3 stroke-[3] shrink-0" />}
+                    <span className="truncate text-center">{bStyle.name}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Corner Radius & Button Colors */}
@@ -613,7 +844,7 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
           SECTION 6: COMPACT CARD & BLOCK DESIGN
           ========================================================================= */}
       {(activeSubTab === "all" || activeSubTab === "cards") && (
-        <div className="p-4 rounded-2xl bg-white border border-[#E5E0D2] shadow-2xs space-y-3.5">
+        <div className="p-4 rounded-2xl bg-white border border-[#E5E0D2] shadow-2xs space-y-3.5" ref={cardDropdownRef}>
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A1C20] flex items-center gap-1.5">
               <LayoutTemplate className="w-3.5 h-3.5 text-[#D4AF37]" />
@@ -623,46 +854,115 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
             <button
               type="button"
               onClick={() => setIsFineTuningCard((p) => !p)}
-              className="text-xs font-semibold text-[#D4AF37] hover:underline flex items-center gap-1"
+              className="text-xs font-semibold text-[#D4AF37] hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>{isFineTuningCard ? "Hide Fine-Tune" : "Fine-Tune Details"}</span>
               <ChevronDown className={`w-3 h-3 transition-transform ${isFineTuningCard ? "rotate-180" : ""}`} />
             </button>
           </div>
 
-          {/* Styled Preset Dropdown (Categorized by optgroup) */}
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[#1A1C20] block">
-              Active Card Preset ({CARD_DESIGN_PRESETS.length} Styles)
-            </label>
-            <select
-              value={currentCardDesign.presetId}
-              onChange={(e) => {
-                const found = CARD_DESIGN_PRESETS.find((p) => p.id === e.target.value);
-                if (found) {
-                  setProfile((prev) => ({
-                    ...prev,
-                    cardDesign: { ...found.config, accentColor: palette.accentGold },
-                  }));
-                }
-              }}
-              className="w-full text-xs font-bold p-2.5 rounded-xl border border-[#E5E0D2] bg-[#FAF9F5] text-[#1A1C20] focus:outline-none focus:border-[#D4AF37]"
+          {/* Simple Thin Card Preset Dropdown */}
+          <div className="space-y-1 relative">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-[#1A1C20]">
+              <span>Active Card Preset</span>
+              <span className="text-[10px] text-[#918355] font-normal">{CARD_DESIGN_PRESETS.length} Styles</span>
+            </div>
+
+            {/* Simple Thin Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setIsCardPresetDropdownOpen((prev) => !prev)}
+              className={`w-full h-9 flex items-center justify-between px-3 rounded-lg border transition-all text-left cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.03)] ${
+                isCardPresetDropdownOpen
+                  ? "border-[#D4AF37] bg-white ring-2 ring-[#D4AF37]/15 shadow-sm"
+                  : "border-[#E5E0D2] bg-[#FAF9F5] hover:border-[#D4AF37]/60 hover:bg-white"
+              }`}
             >
-              {[
-                "Luxury & Atelier",
-                "Modern & Bento",
-                "Creative & 3D",
-                "Minimal & Technical",
-              ].map((category) => (
-                <optgroup key={category} label={category} className="font-bold text-[#918355]">
-                  {CARD_DESIGN_PRESETS.filter((p) => p.category === category).map((preset) => (
-                    <option key={preset.id} value={preset.id} className="text-[#1A1C20] font-normal">
-                      {preset.name} — {preset.tagline}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              <div className="flex items-center gap-2 min-w-0 pr-2">
+                <span
+                  className="w-2 h-2 rounded-full shrink-0 shadow-2xs"
+                  style={{ backgroundColor: activePreset.preview.accentColor || "#D4AF37" }}
+                />
+                <span className="text-xs font-semibold text-[#1A1C20] shrink-0">
+                  {activePreset.name}
+                </span>
+                <span className="text-[#D4AF37]/60 text-[10px] shrink-0">•</span>
+                <span className="text-[11px] text-[#8A7E68] truncate font-normal">
+                  {activePreset.tagline}
+                </span>
+              </div>
+
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-[#918355] shrink-0 transition-transform duration-200 ${
+                  isCardPresetDropdownOpen ? "rotate-180 text-[#D4AF37]" : ""
+                }`}
+              />
+            </button>
+
+            {/* Refined Luxury Dropdown Menu */}
+            {isCardPresetDropdownOpen && (
+              <div className="absolute left-0 right-0 top-[calc(100%+4px)] w-full max-h-72 overflow-y-auto rounded-xl bg-white border border-[#E5E0D2] shadow-[0_12px_36px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.04)] py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                {[
+                  "Luxury & Atelier",
+                  "Modern & Bento",
+                  "Creative & 3D",
+                  "Minimal & Technical",
+                ].map((category, idx) => {
+                  const categoryPresets = CARD_DESIGN_PRESETS.filter((p) => p.category === category);
+                  if (categoryPresets.length === 0) return null;
+                  return (
+                    <div key={category} className={idx > 0 ? "pt-1.5" : ""}>
+                      {/* Section Header with Subtle Accent Line */}
+                      <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#918355] flex items-center gap-2">
+                        <span>{category}</span>
+                        <span className="h-px flex-1 bg-[#E5E0D2]/60" />
+                      </div>
+
+                      {/* Items */}
+                      <div className="px-1.5 space-y-0.5">
+                        {categoryPresets.map((preset) => {
+                          const isSelected = currentCardDesign.presetId === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => {
+                                setProfile((prev) => ({
+                                  ...prev,
+                                  cardDesign: { ...preset.config, accentColor: palette.accentGold },
+                                }));
+                                setIsCardPresetDropdownOpen(false);
+                              }}
+                              className={`w-full px-2.5 py-1.5 rounded-lg text-left flex items-center justify-between text-xs transition-all duration-150 cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#D4AF37]/10 text-[#1A1C20] font-semibold"
+                                  : "text-[#1A1C20] hover:bg-[#FAF7F0] hover:text-[#1A1C20]"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0 pr-2">
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                                  style={{ backgroundColor: preset.preview.accentColor || "#D4AF37" }}
+                                />
+                                <div className="min-w-0">
+                                  <span className={`text-xs ${isSelected ? "font-bold text-[#1A1C20]" : "font-medium"}`}>
+                                    {preset.name}
+                                  </span>
+                                  <span className="text-[10.5px] text-[#8A7E68] font-normal block truncate leading-tight">
+                                    {preset.tagline}
+                                  </span>
+                                </div>
+                              </div>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-[#D4AF37] stroke-[2.5] shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Fine-Tuning Drawer (compact rows) */}
@@ -685,7 +985,7 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
                       key={b}
                       type="button"
                       onClick={() => updateCardDesign({ borderStyle: b as any })}
-                      className={`text-[11px] font-semibold px-2 py-0.8 rounded-lg border transition-all ${
+                      className={`text-[11px] font-semibold px-2 py-0.8 rounded-lg border transition-all cursor-pointer ${
                         currentCardDesign.borderStyle === b
                           ? "bg-[#D4AF37] text-white border-[#D4AF37]"
                           : "bg-[#FAF9F5] border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
@@ -714,7 +1014,7 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
                       key={s}
                       type="button"
                       onClick={() => updateCardDesign({ shadowStyle: s as any })}
-                      className={`text-[11px] font-semibold px-2 py-0.8 rounded-lg border transition-all ${
+                      className={`text-[11px] font-semibold px-2 py-0.8 rounded-lg border transition-all cursor-pointer ${
                         currentCardDesign.shadowStyle === s
                           ? "bg-[#D4AF37] text-white border-[#D4AF37]"
                           : "bg-[#FAF9F5] border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
@@ -726,32 +1026,46 @@ export const ThemeAndStylingPanel: React.FC<ThemeAndStylingPanelProps> = ({
                 </div>
               </div>
 
-              {/* Surface & Hover */}
-              <div className="grid grid-cols-2 gap-2 pt-1">
+              {/* Surface & Hover Chips (No native select!) */}
+              <div className="space-y-2 pt-1">
                 <div className="space-y-1">
                   <span className="text-[11px] font-semibold text-[#918355] block">Surface Finish</span>
-                  <select
-                    value={currentCardDesign.surfaceStyle}
-                    onChange={(e) => updateCardDesign({ surfaceStyle: e.target.value as any })}
-                    className="w-full text-xs font-semibold p-1.5 rounded-lg border border-[#E5E0D2] bg-[#FAF9F5] text-[#1A1C20]"
-                  >
+                  <div className="flex flex-wrap gap-1">
                     {["solid", "glass", "translucent", "gradient", "inset", "clay", "metallic", "linen"].map((sf) => (
-                      <option key={sf} value={sf}>{sf}</option>
+                      <button
+                        key={sf}
+                        type="button"
+                        onClick={() => updateCardDesign({ surfaceStyle: sf as any })}
+                        className={`text-[11px] font-semibold px-2 py-0.8 rounded-lg border transition-all capitalize cursor-pointer ${
+                          currentCardDesign.surfaceStyle === sf
+                            ? "bg-[#D4AF37] text-white border-[#D4AF37]"
+                            : "bg-[#FAF9F5] border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
+                        }`}
+                      >
+                        {sf}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
                   <span className="text-[11px] font-semibold text-[#918355] block">Hover Physics</span>
-                  <select
-                    value={currentCardDesign.hoverEffect}
-                    onChange={(e) => updateCardDesign({ hoverEffect: e.target.value as any })}
-                    className="w-full text-xs font-semibold p-1.5 rounded-lg border border-[#E5E0D2] bg-[#FAF9F5] text-[#1A1C20]"
-                  >
+                  <div className="flex flex-wrap gap-1">
                     {["lift", "scale", "glow", "invert", "shimmer", "bounce", "tilt"].map((hv) => (
-                      <option key={hv} value={hv}>{hv}</option>
+                      <button
+                        key={hv}
+                        type="button"
+                        onClick={() => updateCardDesign({ hoverEffect: hv as any })}
+                        className={`text-[11px] font-semibold px-2 py-0.8 rounded-lg border transition-all capitalize cursor-pointer ${
+                          currentCardDesign.hoverEffect === hv
+                            ? "bg-[#D4AF37] text-white border-[#D4AF37]"
+                            : "bg-[#FAF9F5] border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
+                        }`}
+                      >
+                        {hv}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
               </div>
             </div>

@@ -18,90 +18,49 @@ export const HEADING_FONT_OPTIONS: Array<{
   cssFamily: string;
   previewSample: string;
 }> = [
-  {
-    id: "Playfair Display",
-    name: "Playfair Display",
-    category: "Luxury Editorial Serif",
-    cssFamily: "'Playfair Display', Georgia, serif",
-    previewSample: "Maison & Haute Horlogerie",
-  },
-  {
-    id: "Cinzel",
-    name: "Cinzel",
-    category: "Imperial Roman Luxury",
-    cssFamily: "'Cinzel', serif",
-    previewSample: "ATELIER ROIALE MCMXCIV",
-  },
-  {
-    id: "Syne",
-    name: "Syne Avant-Garde",
-    category: "High Fashion / Art",
-    cssFamily: "'Syne', sans-serif",
-    previewSample: "Avant-Garde Studio '26",
-  },
-  {
-    id: "Cormorant Garamond",
-    name: "Cormorant Garamond",
-    category: "Classical Atelier",
-    cssFamily: "'Cormorant Garamond', Garamond, serif",
-    previewSample: "Private Client Atelier Drops",
-  },
-  {
-    id: "Lora",
-    name: "Lora",
-    category: "Contemporary Literary",
-    cssFamily: "'Lora', serif",
-    previewSample: "Curated Stories & Essays",
-  },
-  {
-    id: "Bebas Neue",
-    name: "Bebas Neue",
-    category: "Bold Headline Display",
-    cssFamily: "'Bebas Neue', cursive, sans-serif",
-    previewSample: "EXCLUSIVE DROP LIVE NOW",
-  },
-  {
-    id: "Outfit",
-    name: "Outfit Contemporary",
-    category: "Modern Minimalist",
-    cssFamily: "'Outfit', sans-serif",
-    previewSample: "Curated Creator Portfolios",
-  },
-  {
-    id: "Space Grotesk",
-    name: "Space Grotesk",
-    category: "Neo-Brutalist / Tech",
-    cssFamily: "'Space Grotesk', monospace, sans-serif",
-    previewSample: "HyperScale Terminal 3.0",
-  },
-  {
-    id: "Plus Jakarta Sans",
-    name: "Plus Jakarta Sans",
-    category: "Clean Premium",
-    cssFamily: "'Plus Jakarta Sans', sans-serif",
-    previewSample: "Executive Advisory Brief",
-  },
-  {
-    id: "DM Sans",
-    name: "DM Sans",
-    category: "Geometric Swiss Precision",
-    cssFamily: "'DM Sans', sans-serif",
-    previewSample: "Design Systems & Architecture",
-  },
-  {
-    id: "Montserrat",
-    name: "Montserrat",
-    category: "Modern Architectural",
-    cssFamily: "'Montserrat', sans-serif",
-    previewSample: "Urban Atelier & Co.",
-  },
-  {
-    id: "Inter",
-    name: "Inter Modernist",
-    category: "Swiss Modern",
-    cssFamily: "'Inter', sans-serif",
-    previewSample: "Universal Creator Profile",
-  },
+  // Luxury & Editorial Serifs
+  { id: "Playfair Display", name: "Playfair Display", category: "Editorial Serif", cssFamily: "'Playfair Display', Georgia, serif", previewSample: "Maison & Haute Horlogerie" },
+  { id: "Cinzel", name: "Cinzel", category: "Imperial Luxury", cssFamily: "'Cinzel', serif", previewSample: "ATELIER ROIALE MCMXCIV" },
+  { id: "Cormorant Garamond", name: "Cormorant Garamond", category: "Classical Atelier", cssFamily: "'Cormorant Garamond', Garamond, serif", previewSample: "Private Client Atelier Drops" },
+  { id: "Bodoni Moda", name: "Bodoni Moda", category: "High Fashion", cssFamily: "'Bodoni Moda', serif", previewSample: "Vogue Milano Editorial" },
+  { id: "DM Serif Display", name: "DM Serif Display", category: "Bold Editorial", cssFamily: "'DM Serif Display', serif", previewSample: "Curated Autumn Issue" },
+  { id: "Fraunces", name: "Fraunces", category: "Vintage Serif", cssFamily: "'Fraunces', serif", previewSample: "Warm Boutique Heritage" },
+  { id: "Prata", name: "Prata", category: "Didone Elegance", cssFamily: "'Prata', serif", previewSample: "Haute Joaillerie Paris" },
+  { id: "Marcellus", name: "Marcellus", category: "Classical Trajan", cssFamily: "'Marcellus', serif", previewSample: "Monaco Grand Yacht Club" },
+  { id: "Abril Fatface", name: "Abril Fatface", category: "Bold Serif Display", cssFamily: "'Abril Fatface', serif", previewSample: "SUMMER DROP LIVE" },
+  { id: "Lora", name: "Lora", category: "Literary Serif", cssFamily: "'Lora', serif", previewSample: "Curated Stories & Essays" },
+
+  // Avant-Garde & High Fashion
+  { id: "Syne", name: "Syne", category: "Avant-Garde", cssFamily: "'Syne', sans-serif", previewSample: "Avant-Garde Studio '26" },
+  { id: "Italiana", name: "Italiana", category: "Italian Chic", cssFamily: "'Italiana', serif", previewSample: "Dolce Vita Alta Sartoria" },
+  { id: "Tenor Sans", name: "Tenor Sans", category: "Editorial Sans", cssFamily: "'Tenor Sans', sans-serif", previewSample: "Minimalist Fashion Lookbook" },
+
+  // Bold Headlines & Display
+  { id: "Bebas Neue", name: "Bebas Neue", category: "Bold Display", cssFamily: "'Bebas Neue', cursive, sans-serif", previewSample: "EXCLUSIVE DROP LIVE NOW" },
+  { id: "Anton", name: "Anton", category: "Heavy Impact", cssFamily: "'Anton', sans-serif", previewSample: "NEW ALBUM STREAMING" },
+  { id: "Oswald", name: "Oswald", category: "Condensed Bold", cssFamily: "'Oswald', sans-serif", previewSample: "WORLD TOUR TICKETS" },
+  { id: "Righteous", name: "Righteous", category: "Retro Future", cssFamily: "'Righteous', cursive", previewSample: "SYNTHWAVE NIGHTS '84" },
+  { id: "Unbounded", name: "Unbounded", category: "Ultra-Wide Modern", cssFamily: "'Unbounded', sans-serif", previewSample: "METAVERSE PROTOCOL" },
+
+  // Tech, Monospace & Brutalist
+  { id: "Space Grotesk", name: "Space Grotesk", category: "Neo-Brutalist", cssFamily: "'Space Grotesk', monospace, sans-serif", previewSample: "HyperScale Terminal 3.0" },
+  { id: "JetBrains Mono", name: "JetBrains Mono", category: "Developer Mono", cssFamily: "'JetBrains Mono', monospace", previewSample: "npm run deploy --prod" },
+
+  // Handwritten & Script
+  { id: "Caveat", name: "Caveat", category: "Handwritten", cssFamily: "'Caveat', cursive", previewSample: "Made with love & coffee" },
+  { id: "Pacifico", name: "Pacifico", category: "Brush Script", cssFamily: "'Pacifico', cursive", previewSample: "Endless Summer Vibes" },
+  { id: "Great Vibes", name: "Great Vibes", category: "Calligraphic Script", cssFamily: "'Great Vibes', cursive", previewSample: "The Signature Collection" },
+
+  // Clean Modern Sans-Serifs
+  { id: "Outfit", name: "Outfit", category: "Modern Minimalist", cssFamily: "'Outfit', sans-serif", previewSample: "Curated Creator Portfolios" },
+  { id: "Plus Jakarta Sans", name: "Plus Jakarta Sans", category: "Executive Premium", cssFamily: "'Plus Jakarta Sans', sans-serif", previewSample: "Executive Advisory Brief" },
+  { id: "Poppins", name: "Poppins", category: "Geometric Rounded", cssFamily: "'Poppins', sans-serif", previewSample: "Friendly Digital Experiences" },
+  { id: "DM Sans", name: "DM Sans", category: "Swiss Precision", cssFamily: "'DM Sans', sans-serif", previewSample: "Design Systems & Architecture" },
+  { id: "Raleway", name: "Raleway", category: "Elegant Sans", cssFamily: "'Raleway', sans-serif", previewSample: "Refined Modern Aesthetics" },
+  { id: "Manrope", name: "Manrope", category: "Modern Tech Sans", cssFamily: "'Manrope', sans-serif", previewSample: "Next-Gen Fintech App" },
+  { id: "Urbanist", name: "Urbanist", category: "Contemporary Clean", cssFamily: "'Urbanist', sans-serif", previewSample: "Architectural Studio Portfolios" },
+  { id: "Montserrat", name: "Montserrat", category: "Modern Grotesque", cssFamily: "'Montserrat', sans-serif", previewSample: "Urban Atelier & Co." },
+  { id: "Inter", name: "Inter", category: "Swiss Modern", cssFamily: "'Inter', sans-serif", previewSample: "Universal Creator Profile" },
 ];
 
 export const BODY_FONT_OPTIONS: Array<{
@@ -114,8 +73,13 @@ export const BODY_FONT_OPTIONS: Array<{
   { id: "Inter", name: "Inter", category: "Crisp & Clean", cssFamily: "'Inter', sans-serif", previewSample: "Clean readable body text for all mobile screens." },
   { id: "Outfit", name: "Outfit", category: "Warm Modern", cssFamily: "'Outfit', sans-serif", previewSample: "Warm and friendly modern sans-serif." },
   { id: "Plus Jakarta Sans", name: "Plus Jakarta Sans", category: "Executive Tech", cssFamily: "'Plus Jakarta Sans', sans-serif", previewSample: "Executive modern rhythm with crisp legibility." },
+  { id: "Poppins", name: "Poppins", category: "Geometric Rounded", cssFamily: "'Poppins', sans-serif", previewSample: "Smooth and friendly rounded geometry." },
   { id: "DM Sans", name: "DM Sans", category: "Geometric Swiss", cssFamily: "'DM Sans', sans-serif", previewSample: "Balanced proportions and humanistic touches." },
+  { id: "Raleway", name: "Raleway", category: "Elegant Sans", cssFamily: "'Raleway', sans-serif", previewSample: "Refined geometric sans-serif styling." },
+  { id: "Manrope", name: "Manrope", category: "Modern Tech Sans", cssFamily: "'Manrope', sans-serif", previewSample: "Clean open grotesque with high legibility." },
+  { id: "Urbanist", name: "Urbanist", category: "Contemporary Clean", cssFamily: "'Urbanist', sans-serif", previewSample: "Low-contrast geometric neutral text." },
   { id: "Space Grotesk", name: "Space Grotesk", category: "Tech Monospace", cssFamily: "'Space Grotesk', monospace", previewSample: "Distinct technical flavor and digital vibe." },
+  { id: "JetBrains Mono", name: "JetBrains Mono", category: "Code Monospace", cssFamily: "'JetBrains Mono', monospace", previewSample: "Engineered for maximum character distinction." },
   { id: "Lora", name: "Lora", category: "Literary Serif", cssFamily: "'Lora', serif", previewSample: "Refined editorial serif for articles and stories." },
   { id: "Montserrat", name: "Montserrat", category: "Urban Grotesque", cssFamily: "'Montserrat', sans-serif", previewSample: "Solid structural geometry and clear presence." },
 ];
@@ -225,46 +189,86 @@ export interface ButtonStyleOption {
   description: string;
 }
 
-export const BUTTON_STYLE_OPTIONS: ButtonStyleOption[] = [
-  {
-    id: "shadow_gold",
-    name: "Gilded Shadow (Signature)",
-    description: "Rich solid color with warm elevated color-matched ambient glow shadow.",
-  },
+export const BUTTON_STYLE_OPTIONS: Array<{ id: ButtonStyle; name: string; description: string }> = [
   {
     id: "solid",
-    name: "Solid Clean",
-    description: "Crisp uniform background with crisp high-contrast text.",
+    name: "Solid",
+    description: "Pure solid fill in selected color with clean modern elevation.",
   },
   {
-    id: "outline",
-    name: "Modern Outline",
-    description: "Transparent surface with a sharp hairline border in accent color.",
+    id: "gradient_luxe",
+    name: "Luxe Gradient",
+    description: "Dynamic metallic sheen gradient blending selected color with light luster.",
   },
   {
-    id: "soft",
-    name: "Soft Pastel Tint",
-    description: "Translucent tinted wash with high-contrast accent text.",
+    id: "shadow_gold",
+    name: "Glow Shadow",
+    description: "Deep diffused colored drop-shadow emanating from selected color.",
   },
   {
-    id: "glass",
-    name: "Frosted Glassmorphism",
-    description: "Ultra-modern translucent glass with backdrop blur and delicate edge lighting.",
+    id: "clay_3d",
+    name: "Tactile 3D",
+    description: "Push-button depth with extruded physical bottom bevel and 3D shadow.",
   },
   {
-    id: "brutalist",
-    name: "Neo-Brutalist Hard",
-    description: "High-contrast thick border with a solid 3px drop-shadow offset.",
+    id: "velvet_matte",
+    name: "Inset Bevel",
+    description: "Pressed inner bevel with tactile engraved depth.",
   },
   {
     id: "pill",
     name: "Smooth Pill",
-    description: "Full pill rounded geometry with fluid active scale click dynamics.",
+    description: "Full pill rounded geometry with subtle elevation.",
+  },
+  {
+    id: "metallic_chrome",
+    name: "Chrome Trim",
+    description: "Specular metallic reflection gradient with highlighted top edge.",
+  },
+  {
+    id: "prism_holo",
+    name: "Gloss Sheen",
+    description: "Apple-style glass reflection sheen over the selected color.",
+  },
+  {
+    id: "brutalist",
+    name: "Brutalist Pop",
+    description: "High-contrast thick border with a solid offset drop-shadow.",
+  },
+  {
+    id: "glow_pulse",
+    name: "Aura Halo",
+    description: "Radiant ambient glowing halo in selected color surrounding the button.",
+  },
+  {
+    id: "retro_double",
+    name: "Double Rim",
+    description: "Gilded double-line luxury framing on selected color.",
+  },
+  {
+    id: "leather_stitch",
+    name: "Stitched",
+    description: "Bespoke dashed contrast border reminiscent of luxury tailor goods.",
   },
   {
     id: "neon",
-    name: "Cyber Neon Glow",
-    description: "Dark surface with electric neon border and vivid outward glow shadow.",
+    name: "Neon Flare",
+    description: "High-intensity neon edge flare with intense outer luminescence.",
+  },
+  {
+    id: "outline",
+    name: "Etched Frame",
+    description: "Crisp inlaid border frame etched into selected color.",
+  },
+  {
+    id: "soft",
+    name: "Soft Satin",
+    description: "Subtle velvet satin inner glow with smooth tactile surface.",
+  },
+  {
+    id: "glass",
+    name: "Frosted Luxe",
+    description: "Frosted glass luster with specular top shine on selected color.",
   },
 ];
 
@@ -277,7 +281,8 @@ export const BUTTON_RADIUS_OPTIONS: Array<{ id: string; name: string; cssRadius:
 ];
 
 /**
- * Computes live button CSSProperties for any button in the profile based on theme settings
+ * Computes live button CSSProperties for any button in the profile based on theme settings.
+ * ALL styles strictly inherit from the user's selected button color (palette.buttonBackground || palette.accentGold)!
  */
 export const getProfileButtonStyles = (
   theme: ProfileThemeConfig,
@@ -285,15 +290,16 @@ export const getProfileButtonStyles = (
 ): React.CSSProperties => {
   const { palette, geometry } = theme;
   const buttonStyle = geometry.buttonStyle || "solid";
-  const btnBg = palette.buttonBackground || palette.accentGold;
+  const btnBg = palette.buttonBackground || palette.accentGold || "#D4AF37";
   const btnText = palette.buttonText || "#1A1C20";
-  const accent = palette.accentGold;
+  const accent = palette.accentGold || btnBg;
 
   let backgroundColor = btnBg;
   let color = btnText;
   let border = "none";
-  let boxShadow = "none";
+  let boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
   let backdropFilter = "none";
+  let backgroundImage = "none";
 
   // Check radius
   const radiusMap: Record<string, string> = {
@@ -311,48 +317,91 @@ export const getProfileButtonStyles = (
   if (buttonStyle === "solid") {
     backgroundColor = btnBg;
     color = btnText;
-    boxShadow = "0 2px 6px rgba(0,0,0,0.06)";
+    boxShadow = "0 2px 8px rgba(0,0,0,0.12)";
   } else if (buttonStyle === "shadow_gold") {
     backgroundColor = btnBg;
     color = btnText;
-    boxShadow = `0 8px 20px -3px ${accent}55, 0 2px 6px -1px ${accent}33`;
-  } else if (buttonStyle === "outline") {
-    backgroundColor = "transparent";
-    color = btnBg;
-    border = `1.5px solid ${btnBg}`;
-  } else if (buttonStyle === "soft") {
-    backgroundColor = `${btnBg}22`;
-    color = btnBg;
-    border = `1px solid ${btnBg}33`;
-  } else if (buttonStyle === "glass") {
-    backgroundColor = "rgba(255, 255, 255, 0.12)";
-    color = palette.primaryText;
-    border = "1px solid rgba(255, 255, 255, 0.25)";
-    backdropFilter = "blur(12px)";
-    boxShadow = "0 4px 16px rgba(0, 0, 0, 0.08)";
+    boxShadow = `0 8px 22px -3px ${btnBg}88, 0 3px 8px -2px ${btnBg}55`;
+  } else if (buttonStyle === "gradient_luxe") {
+    backgroundColor = btnBg;
+    backgroundImage = `linear-gradient(135deg, ${btnBg} 0%, rgba(255,255,255,0.22) 50%, ${btnBg} 100%)`;
+    color = btnText;
+    border = "1px solid rgba(255,255,255,0.35)";
+    boxShadow = `0 6px 18px -3px ${btnBg}66`;
+  } else if (buttonStyle === "clay_3d") {
+    backgroundColor = btnBg;
+    color = btnText;
+    boxShadow = `inset 0 2px 3px rgba(255,255,255,0.45), inset 0 -2px 3px rgba(0,0,0,0.25), 0 4px 0px rgba(0,0,0,0.25), 0 6px 14px rgba(0,0,0,0.15)`;
+  } else if (buttonStyle === "velvet_matte") {
+    backgroundColor = btnBg;
+    color = btnText;
+    boxShadow = "inset 0 3px 6px rgba(0,0,0,0.35), inset 0 -1px 2px rgba(255,255,255,0.25)";
+  } else if (buttonStyle === "pill") {
+    backgroundColor = btnBg;
+    color = btnText;
+    boxShadow = `0 4px 14px ${btnBg}44`;
+  } else if (buttonStyle === "metallic_chrome") {
+    backgroundColor = btnBg;
+    backgroundImage = `linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.18) 100%)`;
+    color = btnText;
+    border = "1px solid rgba(255,255,255,0.5)";
+    boxShadow = `inset 0 1px 2px rgba(255,255,255,0.7), 0 4px 12px ${btnBg}44`;
+  } else if (buttonStyle === "prism_holo") {
+    backgroundColor = btnBg;
+    backgroundImage = `linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 49%, rgba(0,0,0,0.06) 50%, transparent 100%)`;
+    color = btnText;
+    border = "1px solid rgba(255,255,255,0.4)";
+    boxShadow = `inset 0 1px 1px rgba(255,255,255,0.6), 0 4px 14px ${btnBg}44`;
   } else if (buttonStyle === "brutalist") {
     backgroundColor = btnBg;
     color = btnText;
     border = "2px solid #1A1C20";
     boxShadow = "3px 3px 0px #1A1C20";
-  } else if (buttonStyle === "pill") {
+  } else if (buttonStyle === "glow_pulse") {
     backgroundColor = btnBg;
     color = btnText;
-    boxShadow = `0 4px 14px ${accent}33`;
+    boxShadow = `0 0 22px 2px ${btnBg}99, 0 4px 12px ${btnBg}55`;
   } else if (buttonStyle === "neon") {
-    backgroundColor = "#0E0E12";
-    color = accent;
-    border = `1.5px solid ${accent}`;
-    boxShadow = `0 0 16px ${accent}66, inset 0 0 8px ${accent}22`;
+    backgroundColor = btnBg;
+    color = btnText;
+    border = "2px solid rgba(255,255,255,0.85)";
+    boxShadow = `0 0 18px ${btnBg}, inset 0 0 8px rgba(255,255,255,0.35)`;
+  } else if (buttonStyle === "outline") {
+    backgroundColor = btnBg;
+    color = btnText;
+    border = "2px solid rgba(255,255,255,0.8)";
+    boxShadow = "inset 0 0 0 1.5px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.1)";
+  } else if (buttonStyle === "soft") {
+    backgroundColor = btnBg;
+    color = btnText;
+    boxShadow = "inset 0 0 14px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.1)";
+  } else if (buttonStyle === "glass") {
+    backgroundColor = btnBg;
+    backgroundImage = "linear-gradient(135deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 100%)";
+    backdropFilter = "blur(12px)";
+    border = "1.5px solid rgba(255,255,255,0.45)";
+    color = btnText;
+    boxShadow = `inset 0 1px 2px rgba(255,255,255,0.5), 0 4px 14px ${btnBg}44`;
+  } else if (buttonStyle === "retro_double") {
+    backgroundColor = btnBg;
+    color = btnText;
+    border = "3.5px double rgba(255,255,255,0.85)";
+    boxShadow = "0 3px 10px rgba(0,0,0,0.12)";
+  } else if (buttonStyle === "leather_stitch") {
+    backgroundColor = btnBg;
+    color = btnText;
+    border = "1.5px dashed rgba(255,255,255,0.8)";
+    boxShadow = "inset 0 1px 3px rgba(0,0,0,0.18), 0 3px 8px rgba(0,0,0,0.1)";
   }
 
-  // Handle selected state in toggle groups (like support banner amounts)
+  // Handle selected state in toggle groups
   if (overrides?.isSelected) {
     boxShadow = `0 0 0 2px ${palette.background}, 0 0 0 4px ${accent}`;
   }
 
   return {
     backgroundColor,
+    backgroundImage: backgroundImage !== "none" ? backgroundImage : undefined,
     color,
     border,
     boxShadow,

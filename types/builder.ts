@@ -9,7 +9,27 @@ export type BlockType =
   | 'qr_code';
 
 export type CollectionLayout = 'list' | 'grid' | 'carousel' | 'compact';
-export type ButtonStyle = 'solid' | 'outline' | 'soft' | 'glass' | 'shadow_gold' | 'brutalist' | 'pill' | 'neon';
+export type ButtonStyle = 
+  | 'solid' 
+  | 'outline' 
+  | 'soft' 
+  | 'glass' 
+  | 'shadow_gold' 
+  | 'brutalist' 
+  | 'pill' 
+  | 'neon'
+  | 'gradient_luxe'
+  | 'clay_3d'
+  | 'retro_double'
+  | 'glow_pulse'
+  | 'metallic_chrome'
+  | 'leather_stitch'
+  | 'velvet_matte'
+  | 'prism_holo'
+  | 'sunlit_amber'
+  | 'emerald_mint'
+  | 'royal_violet'
+  | 'rose_champagne';
 export type AvatarShape = 'circle' | 'rounded' | 'squircle' | 'hexagon';
 
 export type HeadingFontFamily = 
@@ -18,11 +38,31 @@ export type HeadingFontFamily =
   | 'Syne' 
   | 'Cormorant Garamond'
   | 'Lora'
+  | 'Bodoni Moda'
+  | 'Fraunces'
+  | 'DM Serif Display'
+  | 'Prata'
+  | 'Marcellus'
+  | 'Abril Fatface'
+  | 'Italiana'
+  | 'Tenor Sans'
   | 'Bebas Neue'
+  | 'Anton'
+  | 'Oswald'
+  | 'Righteous'
+  | 'Unbounded'
+  | 'Space Grotesk'
+  | 'JetBrains Mono'
+  | 'Caveat'
+  | 'Pacifico'
+  | 'Great Vibes'
   | 'Outfit' 
-  | 'Space Grotesk' 
   | 'Plus Jakarta Sans' 
   | 'DM Sans'
+  | 'Poppins'
+  | 'Raleway'
+  | 'Manrope'
+  | 'Urbanist'
   | 'Montserrat'
   | 'Inter';
 
@@ -31,7 +71,12 @@ export type BodyFontFamily =
   | 'Outfit' 
   | 'Plus Jakarta Sans' 
   | 'DM Sans'
+  | 'Poppins'
+  | 'Raleway'
+  | 'Manrope'
+  | 'Urbanist'
   | 'Space Grotesk'
+  | 'JetBrains Mono'
   | 'Lora'
   | 'Montserrat';
 
@@ -45,7 +90,12 @@ export type BackgroundPatternType =
   | 'dot_grid'
   | 'isometric_grid'
   | 'subtle_noise'
-  | 'art_deco_lattice';
+  | 'art_deco_lattice'
+  | 'iridescent_hologram'
+  | 'floating_bubbles'
+  | 'neon_horizon'
+  | 'liquid_marble'
+  | 'cyber_matrix';
 
 export interface BackgroundConfig {
   type: BackgroundPatternType;
@@ -73,6 +123,10 @@ export interface BaseBlock {
   isVisible: boolean;
   isArchived: boolean;
   accessRules: LinkAccessRules;
+  destinationUrl?: string;
+  disappearTimerEnabled?: boolean;
+  disappearAt?: string;
+  disappearDurationHours?: number;
   customStyleOverrides?: {
     accentColor?: string;
     textColor?: string;

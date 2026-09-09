@@ -39,7 +39,10 @@ import {
   AlertTriangle,
   LayoutTemplate,
   X as XIcon,
-  Upload
+  Upload,
+  Clock,
+  Link as LinkIcon,
+  Timer
 } from "lucide-react";
 import { INITIAL_PROFILE_DATA } from "@/lib/initialData";
 import { AsoobiProfileDocument, ProfileBlock, BlockType, CardDesignConfig } from "@/types/builder";
@@ -222,6 +225,23 @@ export default function StudioBuilderPage() {
     }));
     setIsSaved(false);
     setTimeout(() => setIsSaved(true), 1200);
+  };
+
+  const formatRemainingTime = (isoExpiry?: string) => {
+    if (!isoExpiry) return "No timer set";
+    const diff = new Date(isoExpiry).getTime() - Date.now();
+    if (diff <= 0) return "Expired (Hidden)";
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 48) {
+      const days = Math.floor(hours / 24);
+      return `${days}d ${hours % 24}h left`;
+    }
+    if (hours > 0) {
+      return `${hours}h ${mins}m left`;
+    }
+    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+    return `${mins}m ${secs}s left`;
   };
 
   const toggleArchiveBlock = (blockId: string) => {
@@ -1011,6 +1031,28 @@ export default function StudioBuilderPage() {
                                   Archived (Disabled)
                                 </span>
                               )}
+                              {block.disappearTimerEnabled && !isArchived && (
+                                <span
+                                  className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 flex items-center gap-1 ${
+                                    new Date(block.disappearAt || "").getTime() <= Date.now()
+                                      ? "bg-red-50 border-red-300 text-red-700"
+                                      : "bg-amber-50 border-amber-300 text-amber-800"
+                                  }`}
+                                  title={`Disappearance Timer: ${formatRemainingTime(block.disappearAt)}`}
+                                >
+                                  <Clock className="w-2.5 h-2.5" />
+                                  <span>{formatRemainingTime(block.disappearAt)}</span>
+                                </span>
+                              )}
+                              {(block.destinationUrl || (block as any).url) && (
+                                <span
+                                  className="text-[9px] text-[#918355] flex items-center gap-0.5 max-w-[110px] truncate"
+                                  title={`Destination Link: ${block.destinationUrl || (block as any).url}`}
+                                >
+                                  <LinkIcon className="w-2.5 h-2.5 shrink-0" />
+                                  <span className="truncate">{(block.destinationUrl || (block as any).url)?.replace(/^https?:\/\//, "")}</span>
+                                </span>
+                              )}
                               {block.accessRules?.isLocked && !isArchived && (
                                 <Lock className="w-3 h-3 text-amber-600 shrink-0" />
                               )}
@@ -1178,6 +1220,127 @@ export default function StudioBuilderPage() {
                                 className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
                               />
                             </div>
+
+                            {/* Universal Destination URL for EVERY block */}
+                            <div>
+                              <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] flex items-center justify-between mb-1">
+                                <span className="flex items-center gap-1.5">
+                                  <LinkIcon className="w-3 h-3 text-[#D4AF37]" />
+                                  <span>Destination Link (URL)</span>
+                                </span>
+                                <span className="text-[9px] text-[#918355] font-normal">Opens on tap</span>
+                              </label>
+                              <input
+                                type="url"
+                                placeholder="https://example.com/destination..."
+                                value={block.destinationUrl || (block as any).url || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  updateBlock(block.id, {
+                                    destinationUrl: val,
+                                    ...("url" in block ? { url: val } : {}),
+                                  } as any);
+                                }}
+                                className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                              />
+                            </div>
+
+                            {/* Universal Disappearance Timer for EVERY block */}
+                            <div className="p-3.5 rounded-xl border border-[#E5E0D2] bg-[#FAF9F5] space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] flex items-center gap-1.5">
+                                  <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                  <span>Disappearance Timer</span>
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const nowEnabled = !block.disappearTimerEnabled;
+                                    const defaultExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                                    updateBlock(block.id, {
+                                      disappearTimerEnabled: nowEnabled,
+                                      disappearAt: block.disappearAt || defaultExpiry,
+                                      disappearDurationHours: block.disappearDurationHours || 24,
+                                    } as any);
+                                  }}
+                                  className={`px-2.5 py-0.8 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                                    block.disappearTimerEnabled
+                                      ? "bg-[#D4AF37] text-white shadow-2xs"
+                                      : "bg-[#EFECE6] text-[#918355] hover:bg-[#E5E0D2]"
+                                  }`}
+                                >
+                                  {block.disappearTimerEnabled ? "Timer Active" : "Set Timer"}
+                                </button>
+                              </div>
+
+                              {block.disappearTimerEnabled && (
+                                <div className="space-y-2 pt-1 border-t border-[#E5E0D2]/60 animate-in fade-in duration-150">
+                                  <div className="flex items-center justify-between text-[11px]">
+                                    <span className="text-[#918355] font-medium">Auto-disappears after:</span>
+                                    <span className="text-[10px] font-mono font-bold text-[#D4AF37] bg-white px-2 py-0.5 rounded-md border border-[#E5E0D2]">
+                                      {formatRemainingTime(block.disappearAt)}
+                                    </span>
+                                  </div>
+
+                                  {/* Quick Duration Presets */}
+                                  <div className="grid grid-cols-5 gap-1">
+                                    {[
+                                      { label: "1h", hours: 1 },
+                                      { label: "12h", hours: 12 },
+                                      { label: "24h", hours: 24 },
+                                      { label: "3d", hours: 72 },
+                                      { label: "7d", hours: 168 },
+                                    ].map((preset) => (
+                                      <button
+                                        key={preset.hours}
+                                        type="button"
+                                        onClick={() => {
+                                          const newExpiry = new Date(Date.now() + preset.hours * 60 * 60 * 1000).toISOString();
+                                          updateBlock(block.id, {
+                                            disappearAt: newExpiry,
+                                            disappearDurationHours: preset.hours,
+                                          } as any);
+                                        }}
+                                        className={`py-1 px-1 rounded-lg text-[10px] font-semibold text-center border transition-all cursor-pointer ${
+                                          block.disappearDurationHours === preset.hours
+                                            ? "bg-[#D4AF37] text-white border-[#D4AF37]"
+                                            : "bg-white border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
+                                        }`}
+                                      >
+                                        {preset.label}
+                                      </button>
+                                    ))}
+                                  </div>
+
+                                  {/* Custom Expiration Date & Time */}
+                                  <div className="pt-1">
+                                    <label className="text-[10px] font-semibold text-[#918355] block mb-1">
+                                      Custom Expiration Date & Time
+                                    </label>
+                                    <input
+                                      type="datetime-local"
+                                      value={
+                                        block.disappearAt
+                                          ? new Date(new Date(block.disappearAt).getTime() - new Date().getTimezoneOffset() * 60000)
+                                              .toISOString()
+                                              .slice(0, 16)
+                                          : ""
+                                      }
+                                      onChange={(e) => {
+                                        if (e.target.value) {
+                                          const d = new Date(e.target.value);
+                                          updateBlock(block.id, {
+                                            disappearAt: d.toISOString(),
+                                            disappearDurationHours: undefined,
+                                          } as any);
+                                        }
+                                      }}
+                                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#E5E0D2] bg-white text-[#1A1C20] focus:outline-none focus:border-[#D4AF37]"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Featured Link Specific: Big Cover Image (Upload Only) */}
@@ -1305,20 +1468,7 @@ export default function StudioBuilderPage() {
                             </div>
                           )}
 
-                          {/* Destination URL for blocks that have url */}
-                          {"url" in block && (
-                            <div>
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block mb-1">
-                                Destination URL
-                              </label>
-                              <input
-                                type="url"
-                                value={(block as any).url}
-                                onChange={(e) => updateBlock(block.id, { url: e.target.value } as any)}
-                                className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                              />
-                            </div>
-                          )}
+
 
                           {/* Collection Items Editor */}
                           {block.type === "collection" && (
@@ -2406,10 +2556,8 @@ export default function StudioBuilderPage() {
               <div className="w-2.5 h-2.5 rounded-full bg-neutral-800 absolute top-2 left-1/2 -translate-x-1/2 z-30 border border-neutral-700" />
 
               {/* Tablet Viewport Canvas */}
-              <div className="flex-1 w-full overflow-y-auto pt-5">
-                <div className="max-w-md mx-auto">
-                  <UnifiedProfileRenderer profile={profile} isInteractive={true} />
-                </div>
+              <div className="flex-1 w-full overflow-y-auto">
+                <UnifiedProfileRenderer profile={profile} isInteractive={true} />
               </div>
 
               {/* Home Bar */}
@@ -2451,9 +2599,7 @@ export default function StudioBuilderPage() {
 
                 {/* Laptop Content Canvas */}
                 <div className="flex-1 w-full overflow-y-auto">
-                  <div className="max-w-md mx-auto py-4">
-                    <UnifiedProfileRenderer profile={profile} isInteractive={true} />
-                  </div>
+                  <UnifiedProfileRenderer profile={profile} isInteractive={true} />
                 </div>
               </div>
 

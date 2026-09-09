@@ -15,7 +15,8 @@ import {
   Share2,
   Globe,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Clock
 } from "lucide-react";
 import { 
   PlatformOfficialBadge,
@@ -86,8 +87,33 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
     }
   };
 
+  const formatRemainingTime = (isoExpiry?: string) => {
+    if (!isoExpiry) return "";
+    const diff = new Date(isoExpiry).getTime() - Date.now();
+    if (diff <= 0) return "Expired";
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 48) {
+      const days = Math.floor(hours / 24);
+      return `${days}d ${hours % 24}h`;
+    }
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
+  const now = Date.now();
   const visibleBlocks = blocks
-    .filter((b) => b.isVisible && !b.isArchived)
+    .filter((b) => {
+      if (!b.isVisible || b.isArchived) return false;
+      // Disappearance timer check: if timer is active and expiry has passed, block disappears!
+      if (b.disappearTimerEnabled && b.disappearAt) {
+        const expiry = new Date(b.disappearAt).getTime();
+        if (expiry <= now) return false;
+      }
+      return true;
+    })
     .sort((a, b) => a.position - b.position);
 
   return (
