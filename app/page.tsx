@@ -68,6 +68,7 @@ export default function StudioBuilderPage() {
   const [draggedBlockIndex, setDraggedBlockIndex] = useState<number | null>(null);
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState<number | null>(null);
   const [openTypeDropdownBlockId, setOpenTypeDropdownBlockId] = useState<string | null>(null);
+  const [isAvatarShapeDropdownOpen, setIsAvatarShapeDropdownOpen] = useState(false);
   const [isPublishedPreviewOpen, setIsPublishedPreviewOpen] = useState(false);
   const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<"mobile" | "tablet" | "desktop">("mobile");
   const [copiedPublishUrl, setCopiedPublishUrl] = useState(false);
@@ -584,21 +585,21 @@ export default function StudioBuilderPage() {
             <button
               onClick={() => setPreviewDevice("mobile")}
               className={`p-1.5 rounded-lg transition-colors ${previewDevice === "mobile" ? "bg-white shadow-sm text-[#D4AF37]" : "text-[#918355] hover:text-[#1A1C20]"}`}
-              title="Mobile Device (390px)"
+              title="Phone"
             >
               <Smartphone className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPreviewDevice("tablet")}
               className={`p-1.5 rounded-lg transition-colors ${previewDevice === "tablet" ? "bg-white shadow-sm text-[#D4AF37]" : "text-[#918355] hover:text-[#1A1C20]"}`}
-              title="Tablet (768px)"
+              title="Tab"
             >
               <Tablet className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPreviewDevice("desktop")}
               className={`p-1.5 rounded-lg transition-colors ${previewDevice === "desktop" ? "bg-white shadow-sm text-[#D4AF37]" : "text-[#918355] hover:text-[#1A1C20]"}`}
-              title="Desktop (1024px)"
+              title="Laptop"
             >
               <Monitor className="w-4 h-4" />
             </button>
@@ -1553,7 +1554,9 @@ export default function StudioBuilderPage() {
                     Profile Avatar (Upload or URL)
                   </label>
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#D4AF37] bg-white shrink-0">
+                    <div className={`w-16 h-16 overflow-hidden border-2 border-[#D4AF37] bg-white shrink-0 transition-all ${
+                      profile.meta.avatarShape === "circle" ? "rounded-full" : profile.meta.avatarShape === "rounded" ? "rounded-xl" : "rounded-2xl"
+                    }`}>
                       <img src={profile.meta.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 space-y-2">
@@ -1665,15 +1668,70 @@ export default function StudioBuilderPage() {
                     <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block mb-1">
                       Avatar Shape
                     </label>
-                    <select
-                      value={profile.meta.avatarShape}
-                      onChange={(e) => setProfile((p) => ({ ...p, meta: { ...p.meta, avatarShape: e.target.value as any } }))}
-                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none"
-                    >
-                      <option value="circle">Circle</option>
-                      <option value="rounded">Rounded Square</option>
-                      <option value="squircle">Squircle</option>
-                    </select>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsAvatarShapeDropdownOpen((prev) => !prev)}
+                        className="w-full text-xs px-3 py-2.5 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] hover:bg-white hover:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37] flex items-center justify-between transition-all"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`w-3.5 h-3.5 border-2 border-[#D4AF37] bg-white inline-block ${
+                            profile.meta.avatarShape === "circle" 
+                              ? "rounded-full" 
+                              : profile.meta.avatarShape === "rounded" 
+                              ? "rounded-xs" 
+                              : "rounded-md"
+                          }`} />
+                          <span className="font-semibold text-[#1A1C20]">
+                            {profile.meta.avatarShape === "circle"
+                              ? "Circle"
+                              : profile.meta.avatarShape === "rounded"
+                              ? "Rounded Square"
+                              : "Squircle"}
+                          </span>
+                        </div>
+                        <ChevronDown className={`w-3.5 h-3.5 text-[#918355] transition-transform duration-200 ${isAvatarShapeDropdownOpen ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {isAvatarShapeDropdownOpen && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-40" 
+                            onClick={() => setIsAvatarShapeDropdownOpen(false)} 
+                          />
+                          <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#E5E0D2] rounded-xl shadow-xl z-50 p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                            {[
+                              { id: "circle", label: "Circle", shapeClass: "rounded-full" },
+                              { id: "rounded", label: "Rounded Square", shapeClass: "rounded-xs" },
+                              { id: "squircle", label: "Squircle", shapeClass: "rounded-md" },
+                            ].map((opt) => {
+                              const isSelected = profile.meta.avatarShape === opt.id;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setProfile((p) => ({ ...p, meta: { ...p.meta, avatarShape: opt.id as any } }));
+                                    setIsAvatarShapeDropdownOpen(false);
+                                  }}
+                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all ${
+                                    isSelected 
+                                      ? "bg-[#FAF8F2] text-[#1A1C20] font-bold border border-[#D4AF37]/50 shadow-2xs" 
+                                      : "text-[#1A1C20] hover:bg-[#F9F9F7]"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <span className={`w-3.5 h-3.5 border-2 ${isSelected ? "border-[#D4AF37] bg-[#D4AF37]/20" : "border-neutral-400"} ${opt.shapeClass}`} />
+                                    <span>{opt.label}</span>
+                                  </div>
+                                  {isSelected && <Check className="w-3.5 h-3.5 text-[#D4AF37]" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -2191,25 +2249,38 @@ export default function StudioBuilderPage() {
         </main>
 
         {/* Column 3: Right-Side Real-Time Simulation Shell */}
-        <aside className="flex-1 bg-[#ECEAE3] flex flex-col items-center justify-center p-6 shrink-0 relative overflow-hidden">
+        <aside className="flex-1 bg-[#ECEAE3] flex flex-col items-center justify-start lg:justify-center p-6 shrink-0 relative overflow-y-auto">
           <div className="text-[11px] font-bold tracking-widest uppercase text-[#918355] mb-4 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
-            <span>Live Device Simulation</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/70 border border-[#E5E0D2] text-[#1A1C20]">
-              {previewDevice === "mobile" ? "iPhone 16 Pro (393 × 852)" : previewDevice === "tablet" ? "iPad Pro 11″ (834 × 1194 scaled)" : "MacBook Air 13″ (1280 × 800 scaled)"}
+            <span>Preview</span>
+            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/80 border border-[#E5E0D2] text-[#1A1C20] shadow-xs">
+              {previewDevice === "mobile" 
+                ? "Phone" 
+                : previewDevice === "tablet" 
+                ? "Tab" 
+                : "Laptop"}
             </span>
           </div>
 
           {/* Real Device Frame Showcase */}
           {previewDevice === "mobile" && (
-            <div className="transition-all duration-300 shadow-2xl rounded-[50px] border-[10px] border-[#1A1C20] overflow-hidden bg-white relative flex flex-col w-[390px] h-[780px] ring-1 ring-black/10">
-              {/* iPhone Dynamic Island */}
-              <div className="w-28 h-6 bg-[#1A1C20] rounded-full absolute top-2.5 left-1/2 -translate-x-1/2 z-30 flex items-center justify-end px-3">
+            <div 
+              className="transition-all duration-300 shadow-2xl rounded-[52px] border-[10px] border-[#1A1C20] overflow-hidden relative flex flex-col w-[390px] h-[844px] max-h-[calc(100vh-140px)] aspect-[1170/2532] ring-1 ring-black/10 shrink-0"
+              style={{ backgroundColor: profile.theme.palette.background }}
+            >
+              {/* iPhone 16e Dynamic Island */}
+              <div className="w-28 h-6 bg-[#1A1C20] rounded-full absolute top-2.5 left-1/2 -translate-x-1/2 z-30 flex items-center justify-end px-3 border border-neutral-700/50">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#111] border border-neutral-700" />
               </div>
 
               {/* Status Bar Fake Header */}
-              <div className="h-10 w-full flex items-center justify-between px-7 pt-1 text-[11px] font-semibold text-[#1A1C20] select-none z-20 shrink-0">
+              <div 
+                className="h-10 w-full flex items-center justify-between px-7 pt-1 text-[11px] font-semibold select-none z-20 shrink-0 transition-colors duration-300"
+                style={{ 
+                  backgroundColor: profile.theme.palette.background,
+                  color: profile.theme.palette.primaryText,
+                }}
+              >
                 <span>9:41</span>
                 <div className="flex items-center gap-1.5 opacity-80">
                   <span className="text-[10px]">5G</span>
@@ -2225,33 +2296,57 @@ export default function StudioBuilderPage() {
               </div>
 
               {/* Home Indicator Bar */}
-              <div className="w-32 h-1 bg-black/40 rounded-full mx-auto my-2 shrink-0" />
+              <div 
+                className="w-full py-2 flex items-center justify-center shrink-0 transition-colors duration-300"
+                style={{ backgroundColor: profile.theme.palette.background }}
+              >
+                <div 
+                  className="w-32 h-1 rounded-full transition-colors duration-300 opacity-40" 
+                  style={{ backgroundColor: profile.theme.palette.primaryText }}
+                />
+              </div>
             </div>
           )}
 
           {previewDevice === "tablet" && (
-            <div className="transition-all duration-300 shadow-2xl rounded-[36px] border-[12px] border-[#1A1C20] overflow-hidden bg-white relative flex flex-col w-[540px] h-[740px] ring-1 ring-black/10">
-              {/* iPad Camera Dot */}
-              <div className="w-2 h-2 rounded-full bg-neutral-800 absolute top-2 left-1/2 -translate-x-1/2 z-30 border border-neutral-700" />
+            <div 
+              className="transition-all duration-300 shadow-2xl rounded-[34px] border-[12px] border-[#1A1C20] overflow-hidden relative flex flex-col w-[620px] h-[465px] max-h-[calc(100vh-140px)] aspect-[4/3] ring-1 ring-black/10 shrink-0"
+              style={{ backgroundColor: profile.theme.palette.background }}
+            >
+              {/* iPad Pro 13" Camera Sensor */}
+              <div className="w-2.5 h-2.5 rounded-full bg-neutral-800 absolute top-2 left-1/2 -translate-x-1/2 z-30 border border-neutral-700" />
 
               {/* Tablet Viewport Canvas */}
-              <div className="flex-1 w-full overflow-y-auto pt-4">
+              <div className="flex-1 w-full overflow-y-auto pt-5">
                 <div className="max-w-md mx-auto">
                   <UnifiedProfileRenderer profile={profile} isInteractive={true} />
                 </div>
               </div>
 
               {/* Home Bar */}
-              <div className="w-40 h-1 bg-black/40 rounded-full mx-auto my-2 shrink-0" />
+              <div 
+                className="w-full py-2 flex items-center justify-center shrink-0 transition-colors duration-300"
+                style={{ backgroundColor: profile.theme.palette.background }}
+              >
+                <div 
+                  className="w-44 h-1 rounded-full transition-colors duration-300 opacity-40" 
+                  style={{ backgroundColor: profile.theme.palette.primaryText }}
+                />
+              </div>
             </div>
           )}
 
           {previewDevice === "desktop" && (
-            <div className="transition-all duration-300 shadow-2xl flex flex-col items-center">
-              {/* Laptop Lid / Screen */}
-              <div className="w-[660px] h-[440px] rounded-t-2xl border-[10px] border-b-0 border-[#1F2124] bg-white relative flex flex-col shadow-xl overflow-hidden ring-1 ring-black/10">
-                {/* Web Camera */}
-                <div className="w-2 h-2 rounded-full bg-neutral-700 absolute top-1.5 left-1/2 -translate-x-1/2 z-30" />
+            <div className="transition-all duration-300 shadow-2xl flex flex-col items-center shrink-0">
+              {/* MacBook Pro 16" Lid / Screen (3456 × 2234, ~1.55:1) */}
+              <div 
+                className="w-[680px] h-[440px] max-h-[calc(100vh-160px)] aspect-[3456/2234] rounded-t-2xl border-[10px] border-b-0 border-[#1F2124] relative flex flex-col shadow-xl overflow-hidden ring-1 ring-black/10 transition-colors duration-300"
+                style={{ backgroundColor: profile.theme.palette.background }}
+              >
+                {/* MacBook Pro Camera Notch */}
+                <div className="w-24 h-3.5 bg-[#1F2124] rounded-b-md absolute top-0 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-neutral-700 border border-neutral-600" />
+                </div>
 
                 {/* Browser Tab Bar */}
                 <div className="h-7 bg-[#E5E0D2]/60 border-b border-[#E5E0D2] flex items-center px-3 gap-2 shrink-0">
@@ -2274,8 +2369,8 @@ export default function StudioBuilderPage() {
               </div>
 
               {/* Laptop Base & Trackpad Lip */}
-              <div className="w-[740px] h-3.5 bg-[#C8C5BC] rounded-b-xl relative shadow-md flex items-start justify-center border-t border-[#AFA99E]">
-                <div className="w-20 h-1.5 bg-[#9E978C] rounded-b-md" />
+              <div className="w-[760px] h-3.5 bg-[#C8C5BC] rounded-b-xl relative shadow-md flex items-start justify-center border-t border-[#AFA99E]">
+                <div className="w-24 h-1.5 bg-[#9E978C] rounded-b-md" />
               </div>
             </div>
           )}
@@ -2317,9 +2412,10 @@ export default function StudioBuilderPage() {
                     ? "bg-[#D4AF37] text-black shadow-sm font-bold" 
                     : "text-neutral-400 hover:text-white"
                 }`}
+                title="Phone"
               >
                 <Smartphone className="w-3.5 h-3.5" />
-                Mobile View
+                Phone
               </button>
               <button
                 type="button"
@@ -2329,9 +2425,10 @@ export default function StudioBuilderPage() {
                     ? "bg-[#D4AF37] text-black shadow-sm font-bold" 
                     : "text-neutral-400 hover:text-white"
                 }`}
+                title="Tab"
               >
                 <Tablet className="w-3.5 h-3.5" />
-                Tab View
+                Tab
               </button>
               <button
                 type="button"
@@ -2341,9 +2438,10 @@ export default function StudioBuilderPage() {
                     ? "bg-[#D4AF37] text-black shadow-sm font-bold" 
                     : "text-neutral-400 hover:text-white"
                 }`}
+                title="Laptop"
               >
                 <Monitor className="w-3.5 h-3.5" />
-                Full Screen
+                Laptop
               </button>
             </div>
 
@@ -2394,7 +2492,7 @@ export default function StudioBuilderPage() {
           >
             {fullScreenPreviewDevice === "mobile" && (
               <div 
-                className="w-[390px] max-w-full h-[844px] max-h-[90vh] rounded-[48px] border-[10px] border-[#22252A] shadow-2xl overflow-hidden relative flex flex-col ring-1 ring-white/10"
+                className="w-[390px] max-w-full h-[844px] max-h-[90vh] aspect-[1170/2532] rounded-[48px] border-[10px] border-[#22252A] shadow-2xl overflow-hidden relative flex flex-col ring-1 ring-white/10"
                 style={{ backgroundColor: profile.theme.palette.background }}
               >
                 {/* Dynamic Island Notch */}
@@ -2410,26 +2508,44 @@ export default function StudioBuilderPage() {
                 </div>
 
                 {/* Home Bar */}
-                <div className="w-36 h-1 bg-black/30 rounded-full mx-auto my-2 shrink-0" />
+                <div 
+                  className="w-full py-2 flex items-center justify-center shrink-0 transition-colors duration-300"
+                  style={{ backgroundColor: profile.theme.palette.background }}
+                >
+                  <div 
+                    className="w-36 h-1 rounded-full transition-colors duration-300 opacity-40" 
+                    style={{ backgroundColor: profile.theme.palette.primaryText }}
+                  />
+                </div>
               </div>
             )}
 
             {fullScreenPreviewDevice === "tablet" && (
               <div 
-                className="w-[640px] max-w-full h-[880px] max-h-[90vh] rounded-[36px] border-[12px] border-[#22252A] shadow-2xl overflow-hidden relative flex flex-col ring-1 ring-white/10"
+                className="w-[800px] max-w-full h-[600px] max-h-[90vh] aspect-[4/3] rounded-[36px] border-[12px] border-[#22252A] shadow-2xl overflow-hidden relative flex flex-col ring-1 ring-white/10"
                 style={{ backgroundColor: profile.theme.palette.background }}
               >
-                {/* Tablet Camera Sensor */}
+                {/* iPad Pro 13" Camera Sensor */}
                 <div className="h-6 w-full flex items-center justify-center absolute top-2 left-0 z-30 pointer-events-none">
                   <div className="w-2.5 h-2.5 rounded-full bg-neutral-800 border border-neutral-700" />
                 </div>
 
                 <div className="flex-1 w-full overflow-y-auto pt-8">
-                  <UnifiedProfileRenderer profile={profile} isInteractive={true} />
+                  <div className="max-w-xl mx-auto">
+                    <UnifiedProfileRenderer profile={profile} isInteractive={true} />
+                  </div>
                 </div>
 
                 {/* Tablet Home Bar */}
-                <div className="w-48 h-1 bg-black/30 rounded-full mx-auto my-2 shrink-0" />
+                <div 
+                  className="w-full py-2 flex items-center justify-center shrink-0 transition-colors duration-300"
+                  style={{ backgroundColor: profile.theme.palette.background }}
+                >
+                  <div 
+                    className="w-48 h-1 rounded-full transition-colors duration-300 opacity-40" 
+                    style={{ backgroundColor: profile.theme.palette.primaryText }}
+                  />
+                </div>
               </div>
             )}
 
@@ -2438,7 +2554,7 @@ export default function StudioBuilderPage() {
                 className="w-full min-h-full flex flex-col items-center justify-start py-10 px-4"
                 style={{ backgroundColor: profile.theme.palette.background }}
               >
-                <div className="w-full max-w-xl">
+                <div className="w-full max-w-2xl">
                   <UnifiedProfileRenderer profile={profile} isInteractive={true} />
                 </div>
               </div>

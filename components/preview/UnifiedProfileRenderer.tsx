@@ -104,8 +104,12 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
             <img
               src={meta.avatarUrl}
               alt={meta.title}
-              className={`w-full h-full object-cover ${
-                meta.avatarShape === "circle" ? "rounded-full" : "rounded-xl"
+              className={`w-full h-full object-cover transition-all ${
+                meta.avatarShape === "circle" 
+                  ? "rounded-full" 
+                  : meta.avatarShape === "rounded" 
+                  ? "rounded-xl" 
+                  : "rounded-2xl"
               }`}
             />
           </div>
