@@ -18,14 +18,22 @@ import {
   ChevronUp
 } from "lucide-react";
 import { 
+  PlatformOfficialBadge,
   InstagramIcon, 
   XTwitterIcon, 
   LinkedInIcon, 
   YouTubeIcon, 
   TikTokIcon, 
-  SpotifyIcon 
+  SpotifyIcon,
+  GitHubIcon,
+  ThreadsIcon,
+  DiscordIcon,
+  TelegramIcon,
+  WhatsAppIcon
 } from "@/components/icons/PlatformIcons";
 import { getCardWrapperClasses, getCardWrapperStyle } from "@/lib/cardDesigns";
+import { BackgroundPatternRenderer } from "@/components/preview/BackgroundPatternRenderer";
+import { getHeadingFontCss, getBodyFontCss, getProfileButtonStyles } from "@/lib/themeUtils";
 
 interface UnifiedProfileRendererProps {
   profile: AsoobiProfileDocument;
@@ -44,9 +52,23 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [formSubmitted, setFormSubmitted] = useState<Record<string, boolean>>({});
+  const [selectedAmounts, setSelectedAmounts] = useState<Record<string, number>>({});
   const [expandedCollections, setExpandedCollections] = useState<Record<string, boolean>>({
     "block-3": true,
   });
+
+  const headingFontCss = getHeadingFontCss(theme.typography.headingFont);
+  const bodyFontCss = getBodyFontCss(theme.typography.bodyFont);
+  const headingLetterSpacing =
+    theme.typography.headingLetterSpacing === "widest"
+      ? "0.12em"
+      : theme.typography.headingLetterSpacing === "wide"
+      ? "0.05em"
+      : theme.typography.headingLetterSpacing === "tight"
+      ? "-0.025em"
+      : "normal";
+  const headingTextTransform = (theme.typography.headingTransform || "none") as React.CSSProperties["textTransform"];
+  const defaultBtnStyle = getProfileButtonStyles(theme);
 
   const handleCopyDiscount = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -74,11 +96,25 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
       style={{
         backgroundColor: theme.palette.background,
         color: theme.palette.primaryText,
+        fontFamily: bodyFontCss,
       }}
     >
+      {/* Google Fonts stylesheet link for typography fidelity */}
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@500;700;800&display=swap"
+      />
+
+      {/* Dynamic Background Pattern & Animation Engine */}
+      <BackgroundPatternRenderer
+        config={theme.backgroundConfig}
+        backgroundColor={theme.palette.background}
+        accentColor={theme.palette.accentGold}
+      />
+
       {/* Hero Cover Image (if grand editorial) */}
       {meta.heroLayout === "grand_editorial" && meta.heroCoverUrl && (
-        <div className="w-full h-40 relative overflow-hidden bg-muted">
+        <div className="w-full h-40 relative overflow-hidden bg-muted z-1">
           <img
             src={meta.heroCoverUrl}
             alt="Cover"
@@ -88,7 +124,7 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
         </div>
       )}
 
-      <div className={`w-full max-w-md px-5 pb-12 flex flex-col items-center ${meta.heroLayout === "grand_editorial" && Boolean(meta.heroCoverUrl) ? "-mt-14" : "pt-8"}`}>
+      <div className={`w-full max-w-md px-5 pb-12 flex flex-col items-center relative z-2 ${meta.heroLayout === "grand_editorial" && Boolean(meta.heroCoverUrl) ? "-mt-14" : "pt-8"}`}>
         {/* Profile Avatar */}
         <div className="relative mb-3">
           <div
@@ -133,7 +169,11 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
         {/* Name & Handle */}
         <h1 
           className="text-2xl font-bold tracking-tight text-center flex items-center gap-1.5"
-          style={{ fontFamily: theme.typography.headingFont === "Playfair Display" ? "var(--font-display)" : "var(--font-sans)" }}
+          style={{ 
+            fontFamily: headingFontCss,
+            letterSpacing: headingLetterSpacing,
+            textTransform: headingTextTransform,
+          }}
         >
           {meta.title}
         </h1>
@@ -184,7 +224,16 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                     )}
                     <div className="p-4 flex flex-col gap-2">
                       <div>
-                        <h2 className="text-base font-bold tracking-tight" style={{ color: theme.palette.primaryText }}>{block.title}</h2>
+                        <h2 
+                          className="text-base font-bold tracking-tight" 
+                          style={{ 
+                            color: theme.palette.primaryText,
+                            fontFamily: headingFontCss,
+                            letterSpacing: headingLetterSpacing,
+                          }}
+                        >
+                          {block.title}
+                        </h2>
                         {block.subtitle && (
                           <p className="text-xs opacity-75 mt-0.5" style={{ color: theme.palette.secondaryText }}>
                             {block.subtitle}
@@ -195,11 +244,8 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                         href={isInteractive ? block.url : undefined}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold tracking-wide uppercase transition-all shadow-md active:scale-95"
-                        style={{
-                          backgroundColor: theme.palette.accentGold,
-                          color: theme.palette.buttonText || "#1A1C20",
-                        }}
+                        className="mt-1 flex items-center justify-center gap-2 py-2.5 px-4 text-xs font-semibold tracking-wide uppercase transition-all active:scale-95"
+                        style={defaultBtnStyle}
                       >
                         {block.callToAction}
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -229,7 +275,15 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                               <Lock className="w-4 h-4" />
                             </div>
                             <div>
-                              <h3 className="text-xs font-semibold" style={{ color: theme.palette.primaryText }}>{block.title}</h3>
+                              <h3 
+                                className="text-xs font-semibold" 
+                                style={{ 
+                                  color: theme.palette.primaryText,
+                                  fontFamily: headingFontCss,
+                                }}
+                              >
+                                {block.title}
+                              </h3>
                               <p className="text-[10px] opacity-70" style={{ color: theme.palette.secondaryText }}>Password required</p>
                             </div>
                           </div>
@@ -250,11 +304,8 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                           />
                           <button
                             onClick={() => handleUnlock(block.id, block.accessRules.password)}
-                            className="px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm"
-                            style={{
-                              backgroundColor: theme.palette.accentGold,
-                              color: theme.palette.buttonText || "#1A1C20",
-                            }}
+                            className="px-3 py-1.5 text-xs font-semibold active:scale-95"
+                            style={defaultBtnStyle}
                           >
                             Unlock
                           </button>
@@ -279,11 +330,26 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                             className="w-11 h-11 rounded-xl object-cover shrink-0"
                           />
                         ) : (
-                          <div
-                            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: `${theme.palette.accentGold}22`, color: theme.palette.accentGold }}
-                          >
-                            <Sparkles className="w-5 h-5" />
+                          <div className="w-11 h-11 shrink-0 flex items-center justify-center">
+                            {(() => {
+                              const s = `${block.title || ""} ${block.url || ""}`.toLowerCase();
+                              if (s.includes("instagram")) return <PlatformOfficialBadge platform="instagram" size="lg" shape="squircle" />;
+                              if (s.includes("x:") || s.includes("x.com") || s.includes("twitter")) return <PlatformOfficialBadge platform="x" size="lg" shape="squircle" />;
+                              if (s.includes("linkedin")) return <PlatformOfficialBadge platform="linkedin" size="lg" shape="squircle" />;
+                              if (s.includes("youtube")) return <PlatformOfficialBadge platform="youtube" size="lg" shape="squircle" />;
+                              if (s.includes("tiktok")) return <PlatformOfficialBadge platform="tiktok" size="lg" shape="squircle" />;
+                              if (s.includes("spotify")) return <PlatformOfficialBadge platform="spotify" size="lg" shape="squircle" />;
+                              if (s.includes("github")) return <PlatformOfficialBadge platform="github" size="lg" shape="squircle" />;
+                              if (s.includes("threads")) return <PlatformOfficialBadge platform="threads" size="lg" shape="squircle" />;
+                              return (
+                                <div
+                                  className="w-11 h-11 rounded-xl flex items-center justify-center"
+                                  style={{ backgroundColor: `${theme.palette.accentGold}22`, color: theme.palette.accentGold }}
+                                >
+                                  <Sparkles className="w-5 h-5" />
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                         <div className="flex-1 min-w-0 pr-1">
@@ -398,10 +464,10 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                     </div>
                     <button
                       onClick={() => handleCopyDiscount(block.code)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold tracking-wider transition-all shadow-sm active:scale-95"
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-mono font-bold tracking-wider transition-all active:scale-95"
                       style={{
-                        backgroundColor: isCopied ? "#10B981" : theme.palette.accentGold,
-                        color: isCopied ? "#FFFFFF" : (theme.palette.buttonText || "#1A1C20"),
+                        ...defaultBtnStyle,
+                        ...(isCopied ? { backgroundColor: "#10B981", color: "#FFFFFF", border: "none" } : {}),
                       }}
                     >
                       {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -418,7 +484,15 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                     className={`${cardClasses} p-4`}
                     style={cardStyles}
                   >
-                    <h3 className="text-xs font-bold" style={{ color: theme.palette.primaryText }}>{block.title}</h3>
+                    <h3 
+                      className="text-xs font-bold" 
+                      style={{ 
+                        color: theme.palette.primaryText,
+                        fontFamily: headingFontCss,
+                      }}
+                    >
+                      {block.title}
+                    </h3>
                     <p className="text-[10px] opacity-70 mb-3" style={{ color: theme.palette.secondaryText }}>{block.subtitle}</p>
 
                     {hasSent ? (
@@ -511,13 +585,10 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                         )}
                         <button
                           type="submit"
-                          className="w-full py-2 px-4 rounded-lg text-xs font-bold tracking-wide uppercase flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
-                          style={{
-                            backgroundColor: theme.palette.accentGold,
-                            color: theme.palette.buttonText || "#1A1C20",
-                          }}
+                          className="w-full py-2.5 px-4 text-xs font-bold tracking-wide uppercase flex items-center justify-center gap-2 transition-transform active:scale-95"
+                          style={defaultBtnStyle}
                         >
-                          <Send className="w-3 h-3" />
+                          <Send className="w-3.5 h-3.5" />
                           {block.submitButtonText}
                         </button>
                       </form>
@@ -537,6 +608,11 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                       else if (social.platform === "youtube") iconElement = <YouTubeIcon className="w-4 h-4" />;
                       else if (social.platform === "tiktok") iconElement = <TikTokIcon className="w-3.5 h-3.5" />;
                       else if (social.platform === "spotify") iconElement = <SpotifyIcon className="w-4 h-4" />;
+                      else if ((social.platform as string) === "github") iconElement = <GitHubIcon className="w-4 h-4" />;
+                      else if ((social.platform as string) === "threads") iconElement = <ThreadsIcon className="w-4 h-4" />;
+                      else if ((social.platform as string) === "discord") iconElement = <DiscordIcon className="w-4 h-4" />;
+                      else if ((social.platform as string) === "telegram") iconElement = <TelegramIcon className="w-4 h-4" />;
+                      else if ((social.platform as string) === "whatsapp") iconElement = <WhatsAppIcon className="w-4 h-4" />;
 
                       return (
                         <a
@@ -565,7 +641,15 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                     style={cardStyles}
                   >
                     <div>
-                      <h3 className="text-xs font-bold" style={{ color: theme.palette.primaryText }}>{block.title}</h3>
+                      <h3 
+                        className="text-xs font-bold" 
+                        style={{ 
+                          color: theme.palette.primaryText,
+                          fontFamily: headingFontCss,
+                        }}
+                      >
+                        {block.title}
+                      </h3>
                       {block.subtitle && (
                         <p className="text-[10px] opacity-70 mt-0.5" style={{ color: theme.palette.secondaryText }}>
                           {block.subtitle}
@@ -585,11 +669,8 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                       href={isInteractive ? block.targetUrl : undefined}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-[11px] font-semibold flex items-center gap-1.5 px-4 py-2 rounded-xl shadow-xs transition-all active:scale-95"
-                      style={{
-                        backgroundColor: theme.palette.accentGold,
-                        color: theme.palette.buttonText || "#1A1C20",
-                      }}
+                      className="text-[11px] font-semibold flex items-center gap-1.5 px-4 py-2 transition-all active:scale-95"
+                      style={defaultBtnStyle}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                       {block.downloadLabel || "Open Target Link"}
@@ -615,7 +696,15 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                         >
                           {block.badgeLabel || "Support"}
                         </span>
-                        <h4 className="text-xs font-bold mt-1" style={{ color: theme.palette.primaryText }}>{block.bannerTitle || block.title}</h4>
+                        <h4 
+                          className="text-xs font-bold mt-1" 
+                          style={{ 
+                            color: theme.palette.primaryText,
+                            fontFamily: headingFontCss,
+                          }}
+                        >
+                          {block.bannerTitle || block.title}
+                        </h4>
                       </div>
                     </div>
                     {block.description && (
@@ -623,32 +712,32 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                     )}
                     {block.presetAmounts && block.presetAmounts.length > 0 && (
                       <div className="flex gap-2">
-                        {block.presetAmounts.map((amt) => (
-                          <a
-                            key={amt}
-                            href={isInteractive ? block.paymentDestinationUrl : undefined}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex-1 py-1.5 rounded-lg border text-center text-xs font-bold transition-all hover:opacity-80"
-                            style={{ 
-                              borderColor: theme.palette.border,
-                              color: theme.palette.primaryText,
-                            }}
-                          >
-                            ${amt}
-                          </a>
-                        ))}
+                        {block.presetAmounts.map((amt) => {
+                          const isSelected = selectedAmounts[block.id] === amt;
+                          return (
+                            <button
+                              key={amt}
+                              type="button"
+                              onClick={() => setSelectedAmounts((prev) => ({ ...prev, [block.id]: amt }))}
+                              className="flex-1 py-1.5 rounded-lg border text-center text-xs font-bold transition-all hover:opacity-80 active:scale-95"
+                              style={{ 
+                                backgroundColor: isSelected ? theme.palette.accentGold : "transparent",
+                                borderColor: isSelected ? theme.palette.accentGold : theme.palette.border,
+                                color: isSelected ? (theme.palette.buttonText || "#1A1C20") : theme.palette.primaryText,
+                              }}
+                            >
+                              ${amt}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                     <a
                       href={isInteractive ? block.paymentDestinationUrl : undefined}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-full py-2 px-4 rounded-xl text-xs font-bold tracking-wide uppercase flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
-                      style={{
-                        backgroundColor: theme.palette.accentGold,
-                        color: theme.palette.buttonText || "#1A1C20",
-                      }}
+                      className="w-full py-2.5 px-4 text-xs font-bold tracking-wide uppercase flex items-center justify-center gap-2 transition-transform active:scale-95"
+                      style={defaultBtnStyle}
                     >
                       Support Now
                       <ExternalLink className="w-3.5 h-3.5" />

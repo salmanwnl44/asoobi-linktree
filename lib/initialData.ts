@@ -36,6 +36,13 @@ export const INITIAL_PROFILE_DATA: AsoobiProfileDocument = {
       buttonRadius: "rounded-xl",
       cardRadius: "rounded-2xl",
       buttonStyle: "shadow_gold",
+      buttonShadow: "colored_glow",
+    },
+    backgroundConfig: {
+      type: "canvas_constellation",
+      patternColor: "#D4AF37",
+      patternOpacity: 0.75,
+      particleSpeed: 1,
     },
   },
   cardDesign: DEFAULT_CARD_DESIGN,

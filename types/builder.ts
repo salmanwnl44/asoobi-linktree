@@ -9,8 +9,52 @@ export type BlockType =
   | 'qr_code';
 
 export type CollectionLayout = 'list' | 'grid' | 'carousel' | 'compact';
-export type ButtonStyle = 'solid' | 'outline' | 'soft' | 'glass' | 'shadow_gold';
+export type ButtonStyle = 'solid' | 'outline' | 'soft' | 'glass' | 'shadow_gold' | 'brutalist' | 'pill' | 'neon';
 export type AvatarShape = 'circle' | 'rounded' | 'squircle' | 'hexagon';
+
+export type HeadingFontFamily = 
+  | 'Playfair Display' 
+  | 'Cinzel'
+  | 'Syne' 
+  | 'Cormorant Garamond'
+  | 'Lora'
+  | 'Bebas Neue'
+  | 'Outfit' 
+  | 'Space Grotesk' 
+  | 'Plus Jakarta Sans' 
+  | 'DM Sans'
+  | 'Montserrat'
+  | 'Inter';
+
+export type BodyFontFamily = 
+  | 'Inter' 
+  | 'Outfit' 
+  | 'Plus Jakarta Sans' 
+  | 'DM Sans'
+  | 'Space Grotesk'
+  | 'Lora'
+  | 'Montserrat';
+
+export type BackgroundPatternType = 
+  | 'solid_block'
+  | 'canvas_constellation'
+  | 'canvas_aurora_waves'
+  | 'canvas_stardust'
+  | 'gradient_radial'
+  | 'gradient_mesh'
+  | 'dot_grid'
+  | 'isometric_grid'
+  | 'subtle_noise'
+  | 'art_deco_lattice';
+
+export interface BackgroundConfig {
+  type: BackgroundPatternType;
+  patternColor?: string;
+  patternOpacity?: number;
+  particleSpeed?: number;
+  gradientAngle?: number;
+  secondaryGradientColor?: string;
+}
 
 export interface LinkAccessRules {
   isLocked: boolean;
@@ -151,16 +195,21 @@ export interface ProfileThemeConfig {
     border: string;
     buttonBackground: string;
     buttonText: string;
+    buttonBorder?: string;
   };
   typography: {
-    headingFont: 'Playfair Display' | 'Inter';
-    bodyFont: 'Inter';
+    headingFont: HeadingFontFamily;
+    bodyFont: BodyFontFamily;
+    headingLetterSpacing?: 'tight' | 'normal' | 'wide' | 'widest';
+    headingTransform?: 'none' | 'uppercase' | 'capitalize';
   };
   geometry: {
     buttonRadius: string;
     cardRadius: string;
     buttonStyle: ButtonStyle;
+    buttonShadow?: 'none' | 'subtle' | 'colored_glow' | 'hard_offset';
   };
+  backgroundConfig?: BackgroundConfig;
 }
 
 export type CardDesignPresetId = 

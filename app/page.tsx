@@ -38,11 +38,13 @@ import {
   RotateCcw,
   AlertTriangle,
   LayoutTemplate,
-  X as XIcon
+  X as XIcon,
+  Upload
 } from "lucide-react";
 import { INITIAL_PROFILE_DATA } from "@/lib/initialData";
 import { AsoobiProfileDocument, ProfileBlock, BlockType, CardDesignConfig } from "@/types/builder";
 import { UnifiedProfileRenderer } from "@/components/preview/UnifiedProfileRenderer";
+import { ThemeAndStylingPanel, ThemeSubTab } from "@/components/builder/ThemeAndStylingPanel";
 import { ALL_CONTACT_TEMPLATES, ContactFormTemplate } from "@/lib/contactTemplates";
 import { REAL_BLOCK_TEMPLATES, PlatformBlockTemplate, CURATED_PLATFORM_THEMES } from "@/lib/blockTemplates";
 import { 
@@ -54,6 +56,7 @@ import {
 } from "@/lib/cardDesigns";
 import { 
   getPlatformBadgeIcon, 
+  PlatformOfficialBadge,
   InstagramIcon, 
   XTwitterIcon, 
   LinkedInIcon, 
@@ -67,15 +70,13 @@ import {
 export default function StudioBuilderPage() {
   const [mounted, setMounted] = useState(false);
   const [profile, setProfile] = useState<AsoobiProfileDocument>(INITIAL_PROFILE_DATA);
-  const [activeTab, setActiveTab] = useState<"content" | "templates" | "profile" | "card_designs" | "appearance" | "settings" | "analytics">("content");
+  const [activeTab, setActiveTab] = useState<"content" | "templates" | "profile" | "appearance" | "settings" | "analytics">("content");
+  const [appearanceSubTab, setAppearanceSubTab] = useState<ThemeSubTab>("all");
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "tablet" | "desktop">("mobile");
   const [isSaved, setIsSaved] = useState(true);
   const [templateSearch, setTemplateSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [selectedCardCategory, setSelectedCardCategory] = useState<string>("All");
-  const [cardDesignAlert, setCardDesignAlert] = useState<string | null>(null);
-  const [isCustomizingCard, setIsCustomizingCard] = useState(false);
   const [copiedTemplateAlert, setCopiedTemplateAlert] = useState<string | null>(null);
   const [copiedPromoCode, setCopiedPromoCode] = useState<string | null>(null);
   const [expandedPreviewId, setExpandedPreviewId] = useState<string | null>(null);
@@ -83,8 +84,6 @@ export default function StudioBuilderPage() {
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState<number | null>(null);
   const [openTypeDropdownBlockId, setOpenTypeDropdownBlockId] = useState<string | null>(null);
   const [isAvatarShapeDropdownOpen, setIsAvatarShapeDropdownOpen] = useState(false);
-  const [blockToDelete, setBlockToDelete] = useState<ProfileBlock | null>(null);
-  const [isArchiveSectionOpen, setIsArchiveSectionOpen] = useState(false);
   const [archiveAlert, setArchiveAlert] = useState<string | null>(null);
   const [isPublishedPreviewOpen, setIsPublishedPreviewOpen] = useState(false);
   const [fullScreenPreviewDevice, setFullScreenPreviewDevice] = useState<"mobile" | "tablet" | "desktop">("mobile");
@@ -225,33 +224,22 @@ export default function StudioBuilderPage() {
     setTimeout(() => setIsSaved(true), 1200);
   };
 
-  const activeBlocks = profile.blocks.filter((b) => !b.isArchived);
-  const archivedBlocks = profile.blocks.filter((b) => b.isArchived);
-
-  const toggleVisibility = (blockId: string) => {
-    setProfile((prev) => ({
-      ...prev,
-      blocks: prev.blocks.map((b) => (b.id === blockId ? { ...b, isVisible: !b.isVisible } : b)),
-    }));
-  };
-
-  const handleInitiateDelete = (block: ProfileBlock) => {
-    setBlockToDelete(block);
-  };
-
-  const handleArchiveBlock = (blockId: string) => {
+  const toggleArchiveBlock = (blockId: string) => {
     const target = profile.blocks.find((b) => b.id === blockId);
+    const willArchive = !target?.isArchived;
     setProfile((prev) => ({
       ...prev,
-      blocks: prev.blocks.map((b) => (b.id === blockId ? { ...b, isArchived: true } : b)),
+      blocks: prev.blocks.map((b) => (b.id === blockId ? { ...b, isArchived: willArchive } : b)),
     }));
-    if (selectedBlockId === blockId) {
+    if (willArchive && selectedBlockId === blockId) {
       setSelectedBlockId(null);
     }
-    setBlockToDelete(null);
-    setIsArchiveSectionOpen(true);
-    setArchiveAlert(`Archived "${target?.title || 'Block'}". You can restore it anytime from the Archive section below.`);
-    setTimeout(() => setArchiveAlert(null), 4000);
+    setArchiveAlert(
+      willArchive
+        ? `Archived "${target?.title || 'Block'}". It is now disabled from your live profile.`
+        : `Unarchived "${target?.title || 'Block'}". It is now active!`
+    );
+    setTimeout(() => setArchiveAlert(null), 3000);
   };
 
   const handlePermanentDelete = (blockId: string) => {
@@ -263,65 +251,25 @@ export default function StudioBuilderPage() {
     if (selectedBlockId === blockId) {
       setSelectedBlockId(null);
     }
-    setBlockToDelete(null);
-    setArchiveAlert(`Permanently deleted "${target?.title || 'Block'}".`);
-    setTimeout(() => setArchiveAlert(null), 3500);
-  };
-
-  const handleRestoreBlock = (blockId: string) => {
-    const target = profile.blocks.find((b) => b.id === blockId);
-    setProfile((prev) => ({
-      ...prev,
-      blocks: prev.blocks.map((b) => (b.id === blockId ? { ...b, isArchived: false } : b)),
-    }));
-    setArchiveAlert(`Restored "${target?.title || 'Block'}" to active content!`);
-    setTimeout(() => setArchiveAlert(null), 3500);
-  };
-
-  const applyCardDesignPreset = (preset: CardDesignPreset) => {
-    setProfile((prev) => ({
-      ...prev,
-      cardDesign: { ...preset.config },
-    }));
-    setIsSaved(false);
-    setTimeout(() => setIsSaved(true), 1200);
-    setCardDesignAlert(`Applied "${preset.name}" card style across all profile cards!`);
-    setTimeout(() => setCardDesignAlert(null), 3500);
-  };
-
-  const updateCardDesignProperty = (updates: Partial<CardDesignConfig>) => {
-    setProfile((prev) => ({
-      ...prev,
-      cardDesign: {
-        ...(prev.cardDesign || DEFAULT_CARD_DESIGN),
-        ...updates,
-      },
-    }));
-    setIsSaved(false);
-    setTimeout(() => setIsSaved(true), 1200);
+    setArchiveAlert(`Deleted "${target?.title || 'Block'}".`);
+    setTimeout(() => setArchiveAlert(null), 3000);
   };
 
   const deleteBlock = (blockId: string) => {
-    const target = profile.blocks.find((b) => b.id === blockId);
-    if (target) {
-      handleInitiateDelete(target);
-    }
+    handlePermanentDelete(blockId);
   };
 
   const moveBlock = (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= activeBlocks.length) return;
-    const newActive = [...activeBlocks];
-    const temp = newActive[index];
-    newActive[index] = newActive[targetIndex];
-    newActive[targetIndex] = temp;
-
-    const nonActive = profile.blocks.filter((b) => b.isArchived);
-    const combined = [...newActive, ...nonActive];
-    combined.forEach((b, i) => {
+    if (targetIndex < 0 || targetIndex >= profile.blocks.length) return;
+    const newBlocks = [...profile.blocks];
+    const temp = newBlocks[index];
+    newBlocks[index] = newBlocks[targetIndex];
+    newBlocks[targetIndex] = temp;
+    newBlocks.forEach((b, i) => {
       b.position = i;
     });
-    setProfile((prev) => ({ ...prev, blocks: combined }));
+    setProfile((prev) => ({ ...prev, blocks: newBlocks }));
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -351,17 +299,14 @@ export default function StudioBuilderPage() {
       return;
     }
 
-    const newActive = [...activeBlocks];
-    const [draggedBlock] = newActive.splice(draggedBlockIndex, 1);
-    newActive.splice(targetIndex, 0, draggedBlock);
-
-    const nonActive = profile.blocks.filter((b) => b.isArchived);
-    const combined = [...newActive, ...nonActive];
-    combined.forEach((b, i) => {
+    const newBlocks = [...profile.blocks];
+    const [draggedBlock] = newBlocks.splice(draggedBlockIndex, 1);
+    newBlocks.splice(targetIndex, 0, draggedBlock);
+    newBlocks.forEach((b, i) => {
       b.position = i;
     });
 
-    setProfile((prev) => ({ ...prev, blocks: combined }));
+    setProfile((prev) => ({ ...prev, blocks: newBlocks }));
     setDraggedBlockIndex(null);
     setDragOverBlockIndex(null);
     setIsSaved(false);
@@ -781,32 +726,20 @@ export default function StudioBuilderPage() {
             </button>
 
             <button
-              onClick={() => setActiveTab("card_designs")}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === "card_designs"
-                  ? "bg-[#D4AF37] text-white shadow-sm"
-                  : "text-[#1A1C20] hover:bg-[#F9F9F7]"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <LayoutTemplate className="w-4 h-4" />
-                <span>Card Design</span>
-              </div>
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${activeTab === "card_designs" ? "bg-white/30 text-white" : "bg-[#D4AF37]/20 text-[#918355]"}`}>
-                {CARD_DESIGN_PRESETS.length} Styles
-              </span>
-            </button>
-
-            <button
               onClick={() => setActiveTab("appearance")}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                 activeTab === "appearance"
                   ? "bg-[#D4AF37] text-white shadow-sm"
                   : "text-[#1A1C20] hover:bg-[#F9F9F7]"
               }`}
             >
-              <Palette className="w-4 h-4" />
-              Themes & Styling
+              <div className="flex items-center gap-3">
+                <Palette className="w-4 h-4" />
+                <span>Themes & Styling</span>
+              </div>
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${activeTab === "appearance" ? "bg-white/30 text-white" : "bg-[#D4AF37]/20 text-[#918355]"}`}>
+                Styles & Cards
+              </span>
             </button>
 
             <button
@@ -895,7 +828,10 @@ export default function StudioBuilderPage() {
               </span>
               <button
                 type="button"
-                onClick={() => setActiveTab("card_designs")}
+                onClick={() => {
+                  setAppearanceSubTab("cards");
+                  setActiveTab("appearance");
+                }}
                 className="text-[10px] font-bold text-[#D4AF37] hover:underline flex items-center gap-0.5"
               >
                 <span>Browse {CARD_DESIGN_PRESETS.length}</span>
@@ -904,7 +840,10 @@ export default function StudioBuilderPage() {
             </div>
             <button
               type="button"
-              onClick={() => setActiveTab("card_designs")}
+              onClick={() => {
+                setAppearanceSubTab("cards");
+                setActiveTab("appearance");
+              }}
               className="w-full p-2.5 rounded-xl border border-[#E5E0D2] bg-white hover:border-[#D4AF37] text-left transition-all flex items-center justify-between shadow-2xs group"
             >
               <div className="flex items-center gap-2.5 min-w-0">
@@ -960,15 +899,15 @@ export default function StudioBuilderPage() {
 
               {/* Block List */}
               <div className="space-y-3">
-                {activeBlocks.length === 0 && (
+                {profile.blocks.length === 0 && (
                   <div className="py-12 px-6 rounded-2xl border-2 border-dashed border-[#E5E0D2] bg-white text-center space-y-3">
                     <div className="w-12 h-12 rounded-2xl bg-[#FAF9F5] border border-[#E5E0D2] flex items-center justify-center mx-auto text-[#D4AF37]">
                       <Sparkles className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-[#1A1C20]">No Active Content Blocks</h3>
+                      <h3 className="text-sm font-bold text-[#1A1C20]">No Content Blocks Yet</h3>
                       <p className="text-xs text-[#918355] mt-1 max-w-sm mx-auto">
-                        Add a new link block, choose an interactive template, or restore blocks from the archive below.
+                        Add a new link block or choose an interactive template to get started.
                       </p>
                     </div>
                     <button
@@ -982,44 +921,49 @@ export default function StudioBuilderPage() {
                   </div>
                 )}
 
-                {activeBlocks.map((block, index) => {
+                {profile.blocks.map((block, index) => {
                   const isSelected = selectedBlockId === block.id;
                   const isDragging = draggedBlockIndex === index;
                   const isDragOver = dragOverBlockIndex === index && draggedBlockIndex !== index;
+                  const isArchived = Boolean(block.isArchived);
 
                   return (
                     <div
                       key={block.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, index)}
-                      onDragOver={(e) => handleDragOver(e, index)}
+                      draggable={!isArchived}
+                      onDragStart={(e) => !isArchived && handleDragStart(e, index)}
+                      onDragOver={(e) => !isArchived && handleDragOver(e, index)}
                       onDragEnd={handleDragEnd}
-                      onDrop={(e) => handleDrop(e, index)}
-                      className={`p-4 rounded-2xl border transition-all bg-white relative ${
+                      onDrop={(e) => !isArchived && handleDrop(e, index)}
+                      className={`p-4 rounded-2xl border transition-all relative ${
+                        isArchived
+                          ? "bg-neutral-100/70 border-dashed border-neutral-300 opacity-65 hover:opacity-85 shadow-2xs"
+                          : "bg-white " + (isSelected ? "border-[#D4AF37] ring-2 ring-[#D4AF37]/20 shadow-md" : "border-[#E5E0D2] hover:border-[#D4AF37]/50")
+                      } ${
                         isDragging ? "opacity-35 scale-[0.98] border-dashed border-[#D4AF37] shadow-xl" : ""
                       } ${
                         isDragOver ? "border-t-4 border-t-[#D4AF37] shadow-md bg-amber-50/30 ring-1 ring-[#D4AF37]/30" : ""
-                      } ${
-                        isSelected
-                          ? "border-[#D4AF37] ring-2 ring-[#D4AF37]/20 shadow-md"
-                          : "border-[#E5E0D2] hover:border-[#D4AF37]/50"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5 min-w-0">
                           {/* Drag Handle */}
                           <div
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, index)}
-                            className="cursor-grab active:cursor-grabbing p-2 rounded-xl text-[#918355] hover:bg-black/5 hover:text-[#1A1C20] transition-colors shrink-0"
-                            title="Drag up or down to reorder"
+                            draggable={!isArchived}
+                            onDragStart={(e) => !isArchived && handleDragStart(e, index)}
+                            className={`p-2 rounded-xl transition-colors shrink-0 ${
+                              isArchived 
+                                ? "text-neutral-300 cursor-not-allowed" 
+                                : "cursor-grab active:cursor-grabbing text-[#918355] hover:bg-black/5 hover:text-[#1A1C20]"
+                            }`}
+                            title={isArchived ? "Unarchive block to reorder" : "Drag up or down to reorder"}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <GripVertical className="w-4 h-4" />
                           </div>
 
                           {/* Block Thumbnail / Type Icon Preview */}
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-[#F9F9F7] border border-[#E5E0D2] flex items-center justify-center shrink-0">
+                          <div className={`w-10 h-10 rounded-lg overflow-hidden bg-[#F9F9F7] border border-[#E5E0D2] flex items-center justify-center shrink-0 ${isArchived ? "grayscale" : ""}`}>
                             {"highlightCoverUrl" in block && (block as any).highlightCoverUrl ? (
                               <img src={(block as any).highlightCoverUrl} alt="" className="w-full h-full object-cover" />
                             ) : "thumbnailUrl" in block && (block as any).thumbnailUrl ? (
@@ -1033,21 +977,21 @@ export default function StudioBuilderPage() {
                             ) : block.type === "social_icons" ? (
                               <Share2 className="w-5 h-5 text-[#D4AF37]" />
                             ) : `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("instagram") ? (
-                              <InstagramIcon className="w-5 h-5 text-pink-600" />
+                              <PlatformOfficialBadge platform="instagram" size="sm" shape="squircle" />
                             ) : `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("x:") || `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("x.com") || `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("twitter") ? (
-                              <XTwitterIcon className="w-4 h-4 text-[#1A1C20]" />
+                              <PlatformOfficialBadge platform="x" size="sm" shape="squircle" />
                             ) : `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("linkedin") ? (
-                              <LinkedInIcon className="w-5 h-5 text-[#0A66C2]" />
+                              <PlatformOfficialBadge platform="linkedin" size="sm" shape="squircle" />
                             ) : `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("youtube") ? (
-                              <YouTubeIcon className="w-5 h-5 text-[#FF0000]" />
+                              <PlatformOfficialBadge platform="youtube" size="sm" shape="squircle" />
                             ) : `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("tiktok") ? (
-                              <TikTokIcon className="w-5 h-5 text-[#1A1C20]" />
+                              <PlatformOfficialBadge platform="tiktok" size="sm" shape="squircle" />
                             ) : `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("spotify") ? (
-                              <SpotifyIcon className="w-5 h-5 text-[#1ED760]" />
+                              <PlatformOfficialBadge platform="spotify" size="sm" shape="squircle" />
                             ) : `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("github") ? (
-                              <GitHubIcon className="w-5 h-5 text-[#24292F]" />
+                              <PlatformOfficialBadge platform="github" size="sm" shape="squircle" />
                             ) : `${block.title} ${(block as any).url || ""}`.toLowerCase().includes("threads") ? (
-                              <ThreadsIcon className="w-5 h-5 text-[#1A1C20]" />
+                              <PlatformOfficialBadge platform="threads" size="sm" shape="squircle" />
                             ) : (
                               <Sparkles className="w-5 h-5 text-[#D4AF37]" />
                             )}
@@ -1055,11 +999,19 @@ export default function StudioBuilderPage() {
 
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-bold text-[#1A1C20] truncate">{block.title || "Untitled Block"}</span>
+                              <span className={`text-xs font-bold truncate ${isArchived ? "line-through text-neutral-500" : "text-[#1A1C20]"}`}>
+                                {block.title || "Untitled Block"}
+                              </span>
                               <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F9F9F7] border border-[#E5E0D2] text-[#918355] shrink-0">
                                 {block.type.replace("_", " ")}
                               </span>
-                              {block.accessRules?.isLocked && (
+                              {isArchived && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 shrink-0 flex items-center gap-1">
+                                  <Archive className="w-2.5 h-2.5 text-amber-700" />
+                                  Archived (Disabled)
+                                </span>
+                              )}
+                              {block.accessRules?.isLocked && !isArchived && (
                                 <Lock className="w-3 h-3 text-amber-600 shrink-0" />
                               )}
                             </div>
@@ -1071,35 +1023,46 @@ export default function StudioBuilderPage() {
                           </div>
                         </div>
 
-                        {/* Action Buttons: EDIT Button + Visibility + Delete */}
+                        {/* Action Buttons: EDIT Button + Archive/Unarchive + Direct Delete */}
                         <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
-                            onClick={() => setSelectedBlockId(isSelected ? null : block.id)}
+                            disabled={isArchived}
+                            onClick={() => !isArchived && setSelectedBlockId(isSelected ? null : block.id)}
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs ${
-                              isSelected
+                              isArchived
+                                ? "bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200"
+                                : isSelected
                                 ? "bg-[#D4AF37] text-white shadow-xs"
                                 : "bg-[#FAF9F5] text-[#1A1C20] hover:bg-[#D4AF37] hover:text-white border border-[#E5E0D2]"
                             }`}
-                            title={isSelected ? "Close Editor" : "Edit Block Details"}
+                            title={isArchived ? "Unarchive this block to edit it" : isSelected ? "Close Editor" : "Edit Block Details"}
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             <span>{isSelected ? "Editing" : "Edit"}</span>
                           </button>
 
+                          {/* Archive/Unarchive Button (Replaces View/Visibility Button) */}
                           <button
-                            onClick={() => toggleVisibility(block.id)}
-                            className={`p-1.5 rounded-lg transition-colors ${
-                              block.isVisible ? "text-[#1A1C20] hover:bg-black/5" : "text-gray-400"
+                            type="button"
+                            onClick={() => toggleArchiveBlock(block.id)}
+                            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                              isArchived
+                                ? "bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 shadow-2xs"
+                                : "text-[#918355] hover:text-[#1A1C20] hover:bg-black/5"
                             }`}
-                            title={block.isVisible ? "Visible on profile" : "Hidden"}
+                            title={isArchived ? "Unarchive content box (Click to enable)" : "Archive content box (Disables from profile)"}
                           >
-                            {block.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                            <Archive className="w-4 h-4" />
+                            {isArchived && <span className="text-[11px] font-semibold">Unarchive</span>}
                           </button>
+
+                          {/* Direct Delete Button: Directly deletes without confirmation modal */}
                           <button
-                            onClick={() => handleInitiateDelete(block)}
-                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                            title="Delete or Archive Block"
+                            type="button"
+                            onClick={() => handlePermanentDelete(block.id)}
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
+                            title="Delete content box"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1107,7 +1070,7 @@ export default function StudioBuilderPage() {
                       </div>
 
                       {/* Selected Block Inline Inspector */}
-                      {isSelected && (
+                      {isSelected && !isArchived && (
                         <div
                           className="mt-4 pt-4 border-t border-[#E5E0D2] space-y-4"
                           onClick={(e) => e.stopPropagation()}
@@ -1217,20 +1180,20 @@ export default function StudioBuilderPage() {
                             </div>
                           </div>
 
-                          {/* Featured Link Specific: Big Cover Image (Upload & URL) */}
+                          {/* Featured Link Specific: Big Cover Image (Upload Only) */}
                           {block.type === "featured_link" && (
                             <div className="space-y-3 p-3.5 rounded-xl border border-[#E5E0D2] bg-[#FAF9F5]">
                               <div className="flex items-center justify-between">
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355]">
-                                  Cover Image (Upload or URL)
+                                  Featured Cover Image
                                 </label>
                                 {(block as any).highlightCoverUrl && (
                                   <button
                                     type="button"
                                     onClick={() => updateBlock(block.id, { highlightCoverUrl: "" } as any)}
-                                    className="text-[10px] text-red-500 hover:underline font-semibold"
+                                    className="text-[10px] text-red-500 hover:text-red-700 font-semibold"
                                   >
-                                    Remove Image
+                                    Remove Cover
                                   </button>
                                 )}
                               </div>
@@ -1245,9 +1208,10 @@ export default function StudioBuilderPage() {
                                 </div>
                               )}
 
-                              <div className="flex gap-2">
-                                <label className="flex-1 cursor-pointer flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-dashed border-[#D4AF37] bg-white text-xs font-semibold text-[#1A1C20] hover:bg-amber-50/50 transition-colors shadow-xs text-center">
-                                  <span>Upload Local Image</span>
+                              <div>
+                                <label className="w-full cursor-pointer flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-dashed border-[#D4AF37] bg-white text-xs font-semibold text-[#1A1C20] hover:bg-amber-50/50 transition-colors shadow-2xs text-center">
+                                  <Upload className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                  <span>{(block as any).highlightCoverUrl ? "Upload Replacement Cover" : "Upload Cover Image"}</span>
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -1259,18 +1223,6 @@ export default function StudioBuilderPage() {
                                     }
                                   />
                                 </label>
-                              </div>
-
-                              <div>
-                                <input
-                                  type="url"
-                                  placeholder="Or paste image URL (https://...)"
-                                  value={(block as any).highlightCoverUrl || ""}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, { highlightCoverUrl: e.target.value } as any)
-                                  }
-                                  className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                                />
                               </div>
 
                               <div className="grid grid-cols-2 gap-3 pt-1">
@@ -1302,26 +1254,26 @@ export default function StudioBuilderPage() {
                             </div>
                           )}
 
-                          {/* Standard Link Specific: Thumbnail Upload & URL */}
+                          {/* Standard Link Specific: Thumbnail Upload Only */}
                           {block.type === "standard_link" && (
                             <div className="space-y-3 p-3.5 rounded-xl border border-[#E5E0D2] bg-[#FAF9F5]">
                               <div className="flex items-center justify-between">
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355]">
-                                  Thumbnail Image (Upload or URL)
+                                  Thumbnail Image
                                 </label>
                                 {(block as any).thumbnailUrl && (
                                   <button
                                     type="button"
                                     onClick={() => updateBlock(block.id, { thumbnailUrl: "" } as any)}
-                                    className="text-[10px] text-red-500 hover:underline font-semibold"
+                                    className="text-[10px] text-red-500 hover:text-red-700 font-semibold"
                                   >
-                                    Remove
+                                    Remove Thumbnail
                                   </button>
                                 )}
                               </div>
 
                               <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 rounded-xl border border-[#E5E0D2] bg-white overflow-hidden shrink-0 flex items-center justify-center">
+                                <div className="w-14 h-14 rounded-xl border border-[#E5E0D2] bg-white overflow-hidden shrink-0 flex items-center justify-center shadow-2xs">
                                   {(block as any).thumbnailUrl ? (
                                     <img
                                       src={(block as any).thumbnailUrl}
@@ -1333,9 +1285,10 @@ export default function StudioBuilderPage() {
                                   )}
                                 </div>
 
-                                <div className="flex-1 space-y-2">
-                                  <label className="cursor-pointer inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-dashed border-[#D4AF37] bg-white text-xs font-semibold text-[#1A1C20] hover:bg-amber-50/50 transition-colors shadow-xs">
-                                    <span>Upload Thumbnail</span>
+                                <div className="flex-1">
+                                  <label className="cursor-pointer inline-flex items-center gap-2 py-2 px-3.5 rounded-xl border border-dashed border-[#D4AF37] bg-white text-xs font-semibold text-[#1A1C20] hover:bg-amber-50/50 transition-colors shadow-2xs">
+                                    <Upload className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                    <span>{(block as any).thumbnailUrl ? "Upload New Thumbnail" : "Upload Thumbnail"}</span>
                                     <input
                                       type="file"
                                       accept="image/*"
@@ -1347,15 +1300,6 @@ export default function StudioBuilderPage() {
                                       }
                                     />
                                   </label>
-                                  <input
-                                    type="url"
-                                    placeholder="Or paste thumbnail URL..."
-                                    value={(block as any).thumbnailUrl || ""}
-                                    onChange={(e) =>
-                                      updateBlock(block.id, { thumbnailUrl: e.target.value } as any)
-                                    }
-                                    className="w-full text-xs px-3 py-1.5 rounded-lg border border-[#E5E0D2] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                                  />
                                 </div>
                               </div>
                             </div>
@@ -1449,33 +1393,43 @@ export default function StudioBuilderPage() {
                                       </button>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-2 text-[10px]">
-                                      <label className="cursor-pointer text-center py-1 px-2 rounded-lg border border-dashed border-[#D4AF37] bg-[#F9F9F7] font-medium text-[#1A1C20]">
-                                        Upload Item Image
-                                        <input
-                                          type="file"
-                                          accept="image/*"
-                                          className="hidden"
-                                          onChange={(e) =>
-                                            handleFileUpload(e, (base64) => {
-                                              const updated = [...(block as any).items];
-                                              updated[itemIndex] = { ...updated[itemIndex], thumbnailUrl: base64 };
-                                              updateBlock(block.id, { items: updated } as any);
-                                            })
-                                          }
-                                        />
-                                      </label>
-                                      <input
-                                        type="url"
-                                        placeholder="Item Image URL"
-                                        value={item.thumbnailUrl || ""}
-                                        onChange={(e) => {
-                                          const updated = [...(block as any).items];
-                                          updated[itemIndex] = { ...updated[itemIndex], thumbnailUrl: e.target.value };
-                                          updateBlock(block.id, { items: updated } as any);
-                                        }}
-                                        className="text-[10px] px-2 py-1 rounded-lg border border-[#E5E0D2]"
-                                      />
+                                    <div className="flex items-center justify-between gap-2 pt-1">
+                                      <div className="flex items-center gap-2">
+                                        {item.thumbnailUrl && (
+                                          <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#E5E0D2] shrink-0">
+                                            <img src={item.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                                          </div>
+                                        )}
+                                        <label className="cursor-pointer inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg border border-dashed border-[#D4AF37] bg-white text-[10px] font-semibold text-[#1A1C20] hover:bg-amber-50/50 shadow-2xs">
+                                          <Upload className="w-3 h-3 text-[#D4AF37]" />
+                                          <span>{item.thumbnailUrl ? "Change Image" : "Upload Image"}</span>
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) =>
+                                              handleFileUpload(e, (base64) => {
+                                                const updated = [...(block as any).items];
+                                                updated[itemIndex] = { ...updated[itemIndex], thumbnailUrl: base64 };
+                                                updateBlock(block.id, { items: updated } as any);
+                                              })
+                                            }
+                                          />
+                                        </label>
+                                      </div>
+                                      {item.thumbnailUrl && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const updated = [...(block as any).items];
+                                            updated[itemIndex] = { ...updated[itemIndex], thumbnailUrl: "" };
+                                            updateBlock(block.id, { items: updated } as any);
+                                          }}
+                                          className="text-[10px] text-red-500 hover:text-red-700 font-semibold"
+                                        >
+                                          Remove
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 ))}
@@ -1714,120 +1668,6 @@ export default function StudioBuilderPage() {
                   );
                 })}
               </div>
-
-              {/* Dedicated Archive Section */}
-              <div className="mt-8 pt-6 border-t border-[#E5E0D2] space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setIsArchiveSectionOpen((prev) => !prev)}
-                  className="w-full p-4 rounded-2xl border border-[#E5E0D2] bg-white hover:border-[#D4AF37] transition-all flex items-center justify-between shadow-2xs group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#D4AF37]">
-                      <Archive className="w-4 h-4" />
-                    </div>
-                    <div className="text-left">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#1A1C20] group-hover:text-[#D4AF37] transition-colors">
-                          Archived Blocks
-                        </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          archivedBlocks.length > 0 
-                            ? "bg-[#D4AF37] text-white" 
-                            : "bg-[#F9F9F7] text-[#918355] border border-[#E5E0D2]"
-                        }`}>
-                          {archivedBlocks.length}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-[#918355]">
-                        Hidden from your live profile • Restore anytime or delete permanently
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-xs text-[#918355]">
-                    <span className="text-[11px] font-semibold">{isArchiveSectionOpen ? "Hide" : "View"}</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isArchiveSectionOpen ? "rotate-180" : ""}`} />
-                  </div>
-                </button>
-
-                {isArchiveSectionOpen && (
-                  <div className="p-4 rounded-2xl border border-[#E5E0D2] bg-[#FAF9F5] space-y-3 animate-in fade-in duration-150">
-                    {archivedBlocks.length === 0 ? (
-                      <div className="py-8 text-center space-y-2">
-                        <div className="w-12 h-12 rounded-2xl bg-white border border-[#E5E0D2] flex items-center justify-center mx-auto text-[#918355]">
-                          <Archive className="w-5 h-5 opacity-50" />
-                        </div>
-                        <p className="text-xs font-bold text-[#1A1C20]">No Archived Blocks</p>
-                        <p className="text-[11px] text-[#918355] max-w-sm mx-auto">
-                          When you delete a block and choose to archive it, it will be safely kept here without losing any settings.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2.5">
-                        <div className="flex items-center justify-between text-[11px] text-[#918355] px-1">
-                          <span>{archivedBlocks.length} block{archivedBlocks.length === 1 ? "" : "s"} in archive</span>
-                          <span className="text-[10px] italic">Hidden from live simulation & public link</span>
-                        </div>
-
-                        {archivedBlocks.map((block) => (
-                          <div
-                            key={block.id}
-                            className="p-3.5 rounded-xl border border-[#E5E0D2] bg-white flex items-center justify-between gap-3 shadow-2xs hover:shadow-xs transition-all"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-lg bg-[#F9F9F7] border border-[#E5E0D2] flex items-center justify-center shrink-0">
-                                {"highlightCoverUrl" in block && (block as any).highlightCoverUrl ? (
-                                  <img src={(block as any).highlightCoverUrl} alt="" className="w-full h-full object-cover rounded-lg" />
-                                ) : "thumbnailUrl" in block && (block as any).thumbnailUrl ? (
-                                  <img src={(block as any).thumbnailUrl} alt="" className="w-full h-full object-cover rounded-lg" />
-                                ) : (
-                                  <Archive className="w-4 h-4 text-[#918355]" />
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-bold text-[#1A1C20] truncate">
-                                    {block.title || "Untitled Block"}
-                                  </span>
-                                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F9F9F7] border border-[#E5E0D2] text-[#918355] shrink-0">
-                                    {block.type.replace("_", " ")}
-                                  </span>
-                                </div>
-                                {block.subtitle && (
-                                  <p className="text-[10px] text-[#918355] truncate mt-0.5">
-                                    {block.subtitle}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => handleRestoreBlock(block.id)}
-                                className="px-3 py-1.5 rounded-xl bg-[#D4AF37] hover:bg-[#b8962e] text-[#1A1C20] text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs active:scale-95"
-                                title="Restore to active profile blocks"
-                              >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                                <span>Restore</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handlePermanentDelete(block.id)}
-                                className="p-1.5 rounded-xl text-red-500 hover:bg-red-50 border border-red-100 transition-colors active:scale-95"
-                                title="Delete Permanently"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           )}
 
@@ -1839,20 +1679,38 @@ export default function StudioBuilderPage() {
               </div>
 
               <div className="p-6 rounded-2xl bg-white border border-[#E5E0D2] space-y-4">
-                {/* Avatar upload & link */}
+                {/* Avatar upload */}
                 <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E5E0D2] space-y-3">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
-                    Profile Avatar (Upload or URL)
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
+                      Profile Avatar
+                    </label>
+                    {profile.meta.avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setProfile((p) => ({ ...p, meta: { ...p.meta, avatarUrl: "" } }))}
+                        className="text-[10px] text-red-500 hover:text-red-700 font-semibold"
+                      >
+                        Remove Avatar
+                      </button>
+                    )}
+                  </div>
                   <div className="flex items-center gap-4">
                     <div className={`w-16 h-16 overflow-hidden border-2 border-[#D4AF37] bg-white shrink-0 transition-all ${
                       profile.meta.avatarShape === "circle" ? "rounded-full" : profile.meta.avatarShape === "rounded" ? "rounded-xl" : "rounded-2xl"
                     }`}>
-                      <img src={profile.meta.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                      {profile.meta.avatarUrl ? (
+                        <img src={profile.meta.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-neutral-300">
+                          <User className="w-8 h-8" />
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1 space-y-2">
-                      <label className="cursor-pointer inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-dashed border-[#D4AF37] bg-white text-xs font-semibold text-[#1A1C20] hover:bg-amber-50/50 shadow-xs">
-                        <span>Upload New Avatar</span>
+                    <div className="flex-1">
+                      <label className="cursor-pointer inline-flex items-center gap-2 py-2 px-3.5 rounded-xl border border-dashed border-[#D4AF37] bg-white text-xs font-semibold text-[#1A1C20] hover:bg-amber-50/50 shadow-2xs">
+                        <Upload className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        <span>{profile.meta.avatarUrl ? "Upload New Avatar" : "Upload Avatar"}</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -1864,32 +1722,35 @@ export default function StudioBuilderPage() {
                           }
                         />
                       </label>
-                      <input
-                        type="url"
-                        placeholder="Or avatar image URL..."
-                        value={profile.meta.avatarUrl}
-                        onChange={(e) =>
-                          setProfile((p) => ({ ...p, meta: { ...p.meta, avatarUrl: e.target.value } }))
-                        }
-                        className="w-full text-xs px-3 py-1.5 rounded-lg border border-[#E5E0D2] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Hero Cover upload & link */}
+                {/* Hero Cover upload */}
                 <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E5E0D2] space-y-3">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
-                    Hero Cover Banner (Upload or URL)
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
+                      Hero Cover Banner
+                    </label>
+                    {profile.meta.heroCoverUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setProfile((p) => ({ ...p, meta: { ...p.meta, heroCoverUrl: "" } }))}
+                        className="text-[10px] text-red-500 hover:text-red-700 font-semibold"
+                      >
+                        Remove Banner
+                      </button>
+                    )}
+                  </div>
                   {profile.meta.heroCoverUrl && (
-                    <div className="w-full h-24 rounded-lg overflow-hidden border border-[#E5E0D2] bg-gray-50">
+                    <div className="w-full h-28 rounded-xl overflow-hidden border border-[#E5E0D2] bg-gray-50">
                       <img src={profile.meta.heroCoverUrl} alt="Cover" className="w-full h-full object-cover" />
                     </div>
                   )}
-                  <div className="flex gap-2">
-                    <label className="flex-1 cursor-pointer text-center py-2 px-3 rounded-xl border border-dashed border-[#D4AF37] bg-white text-xs font-semibold text-[#1A1C20] hover:bg-amber-50/50 shadow-xs">
-                      <span>Upload Cover Image</span>
+                  <div>
+                    <label className="cursor-pointer inline-flex items-center gap-2 py-2 px-3.5 rounded-xl border border-dashed border-[#D4AF37] bg-white text-xs font-semibold text-[#1A1C20] hover:bg-amber-50/50 shadow-2xs">
+                      <Upload className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span>{profile.meta.heroCoverUrl ? "Upload New Cover Image" : "Upload Cover Image"}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -1902,15 +1763,6 @@ export default function StudioBuilderPage() {
                       />
                     </label>
                   </div>
-                  <input
-                    type="url"
-                    placeholder="Or cover banner URL..."
-                    value={profile.meta.heroCoverUrl || ""}
-                    onChange={(e) =>
-                      setProfile((p) => ({ ...p, meta: { ...p.meta, heroCoverUrl: e.target.value } }))
-                    }
-                    className="w-full text-xs px-3 py-1.5 rounded-lg border border-[#E5E0D2] bg-white focus:outline-none"
-                  />
                 </div>
 
                 <div>
@@ -2177,9 +2029,7 @@ export default function StudioBuilderPage() {
                               {/* Card Header: Platform Icon + Name & Block Type */}
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
-                                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${tmpl.badgeColor}`}>
-                                    {getPlatformBadgeIcon(tmpl.platform || tmpl.badge, "w-3.5 h-3.5")}
-                                  </div>
+                                  <PlatformOfficialBadge platform={tmpl.platform || tmpl.badge} size="md" shape="circle" />
                                   <span className="text-xs font-bold text-[#1A1C20] tracking-tight">{tmpl.platform}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
@@ -2448,583 +2298,15 @@ export default function StudioBuilderPage() {
             </div>
           )}
 
-          {activeTab === "card_designs" && (
-            <div className="p-8 max-w-3xl w-full mx-auto space-y-6">
-              {/* Card Design Feedback Alert */}
-              {cardDesignAlert && (
-                <div className="p-3.5 bg-amber-50 border border-[#D4AF37] text-amber-900 text-xs font-semibold rounded-2xl shadow-xs flex items-center justify-between animate-in fade-in duration-200">
-                  <div className="flex items-center gap-2.5">
-                    <LayoutTemplate className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                    <span>{cardDesignAlert}</span>
-                  </div>
-                  <button onClick={() => setCardDesignAlert(null)} className="text-amber-700 hover:text-black">
-                    <XIcon className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-
-              {/* Header & Target Block Indicator */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    <h2 className="text-xl font-display font-bold text-[#1A1C20]">Card Design Studio</h2>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#D4AF37] text-white font-bold">
-                      {CARD_DESIGN_PRESETS.length} Styles
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#918355] mt-1 max-w-xl leading-relaxed">
-                    Select from multiple card styles tailored for luxury brands, creator portfolios, frosted glass aesthetics, neo-brutalism, and minimalist profiles. Every card on your profile instantly updates.
-                  </p>
-                </div>
-
-                {selectedBlock && (
-                  <div className="bg-amber-50/70 border border-amber-200/80 p-3 rounded-2xl shrink-0 space-y-1 sm:max-w-xs shadow-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-amber-800 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
-                        Selected Block
-                      </span>
-                      <button
-                        onClick={() => setSelectedBlockId(null)}
-                        className="text-[10px] text-amber-700 underline hover:text-black font-semibold"
-                      >
-                        Deselect
-                      </button>
-                    </div>
-                    <p className="text-xs font-bold text-[#1A1C20] truncate">
-                      {selectedBlock.title || "Untitled Block"}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Active Card Design Spotlight Card */}
-              {(() => {
-                const currentDesign = profile.cardDesign || DEFAULT_CARD_DESIGN;
-                const activePreset = CARD_DESIGN_PRESETS.find((p) => p.id === currentDesign.presetId) || CARD_DESIGN_PRESETS[0];
-                const activeClasses = getCardWrapperClasses(currentDesign);
-                const activeStyles = getCardWrapperStyle(currentDesign, profile.theme.palette);
-
-                return (
-                  <div className="p-6 rounded-3xl border-2 border-[#D4AF37] bg-[#FAF8F2] shadow-sm space-y-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#918355]">
-                          Currently Active Design on Profile
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsCustomizingCard((prev) => !prev)}
-                        className="text-xs font-bold text-[#1A1C20] hover:text-[#D4AF37] flex items-center gap-1.5 transition-colors"
-                      >
-                        <Sliders className="w-3.5 h-3.5 text-[#D4AF37]" />
-                        <span>{isCustomizingCard ? "Hide Fine-Tuning" : "Fine-Tune Details"}</span>
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isCustomizingCard ? "rotate-180" : ""}`} />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div>
-                        <h3 className="text-lg font-display font-bold text-[#1A1C20]">
-                          {currentDesign.name}
-                        </h3>
-                        <p className="text-xs text-[#918355] mt-0.5 max-w-md">
-                          {activePreset.description}
-                        </p>
-                      </div>
-
-                      {/* Attribute Pills */}
-                      <div className="flex flex-wrap gap-1.5">
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white border border-[#E5E0D2] text-[#1A1C20]">
-                          Radius: {currentDesign.borderRadius}
-                        </span>
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white border border-[#E5E0D2] text-[#1A1C20]">
-                          Border: {currentDesign.borderStyle}
-                        </span>
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white border border-[#E5E0D2] text-[#1A1C20]">
-                          Shadow: {currentDesign.shadowStyle}
-                        </span>
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white border border-[#E5E0D2] text-[#1A1C20]">
-                          Hover: {currentDesign.hoverEffect}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Interactive Real-Time Card Mockup */}
-                    <div className="p-4 bg-white/60 rounded-2xl border border-[#E5E0D2]/60">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#918355] mb-2 flex items-center justify-between">
-                        <span>Interactive Card Preview (Hover to test animation)</span>
-                        <span className="text-[9px] text-[#D4AF37] font-semibold">Real Rendering</span>
-                      </div>
-
-                      <div 
-                        className="p-3.5 rounded-2xl border transition-colors"
-                        style={{
-                          backgroundColor: profile.theme.palette.background,
-                          borderColor: profile.theme.palette.border,
-                        }}
-                      >
-                        <div className={activeClasses} style={activeStyles}>
-                          <div className="p-3.5 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div 
-                                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs"
-                                style={{ 
-                                  backgroundColor: `${profile.theme.palette.accentGold || currentDesign.accentColor || '#D4AF37'}22`, 
-                                  color: profile.theme.palette.accentGold || currentDesign.accentColor || '#D4AF37' 
-                                }}
-                              >
-                                <Sparkles className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <h4 
-                                  className="text-xs font-bold truncate"
-                                  style={{ color: profile.theme.palette.primaryText }}
-                                >
-                                  Live Interactive Card Sample
-                                </h4>
-                                <p 
-                                  className="text-[10px] truncate mt-0.5"
-                                  style={{ color: profile.theme.palette.secondaryText }}
-                                >
-                                  Reflects real card surface, shadow elevation, and borders
-                                </p>
-                              </div>
-                            </div>
-
-                            <div 
-                              className="px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-wide flex items-center gap-1.5 shrink-0 shadow-2xs"
-                              style={{ 
-                                backgroundColor: profile.theme.palette.accentGold, 
-                                color: profile.theme.palette.buttonText || '#1A1C20' 
-                              }}
-                            >
-                              <span>Explore</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Fine-Tuning Drawer */}
-                    {isCustomizingCard && (
-                      <div className="pt-4 border-t border-[#E5E0D2] space-y-4 animate-in fade-in duration-200">
-                        <div className="text-xs font-bold text-[#1A1C20]">
-                          Fine-Tune Active Card Properties
-                        </div>
-
-                        {/* Corner Radius */}
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
-                            Corner Radius
-                          </label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {[
-                              { label: "Sharp Square", val: "rounded-none" },
-                              { label: "Subtle (8px)", val: "rounded-lg" },
-                              { label: "Standard (12px)", val: "rounded-xl" },
-                              { label: "Squircle (16px)", val: "rounded-2xl" },
-                              { label: "Curved (24px)", val: "rounded-3xl" },
-                              { label: "Full Pill", val: "rounded-full" },
-                            ].map((r) => (
-                              <button
-                                key={r.val}
-                                type="button"
-                                onClick={() => updateCardDesignProperty({ borderRadius: r.val })}
-                                className={`text-[11px] font-semibold px-3 py-1.5 rounded-xl border transition-all ${
-                                  currentDesign.borderRadius === r.val
-                                    ? "bg-[#D4AF37] border-[#D4AF37] text-white shadow-xs"
-                                    : "bg-white border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
-                                }`}
-                              >
-                                {r.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Border Style */}
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
-                            Border Treatment
-                          </label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {[
-                              { label: "Borderless", val: "none" },
-                              { label: "Hairline Divider", val: "subtle" },
-                              { label: "Gilded Gold", val: "gold_accent" },
-                              { label: "Neo-Brutalist 2.5px", val: "brutalist_bold" },
-                              { label: "Monograph Double", val: "double_editorial" },
-                              { label: "Saddle Stitch", val: "leather_stitch" },
-                              { label: "Liquid Chrome", val: "chrome_metallic" },
-                              { label: "Rainbow Prism", val: "rainbow_prism" },
-                              { label: "Radiant Glow", val: "glow" },
-                              { label: "Dashed Outline", val: "dashed" },
-                            ].map((b) => (
-                              <button
-                                key={b.val}
-                                type="button"
-                                onClick={() => updateCardDesignProperty({ borderStyle: b.val as any })}
-                                className={`text-[11px] font-semibold px-3 py-1.5 rounded-xl border transition-all ${
-                                  currentDesign.borderStyle === b.val
-                                    ? "bg-[#D4AF37] border-[#D4AF37] text-white shadow-xs"
-                                    : "bg-white border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
-                                }`}
-                              >
-                                {b.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Shadow & Elevation */}
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
-                            Shadow & Elevation
-                          </label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {[
-                              { label: "Flat (No Shadow)", val: "none" },
-                              { label: "Whisper Soft", val: "soft" },
-                              { label: "Floating 3D", val: "floating" },
-                              { label: "Bento Ambient Spread", val: "ambient_spread" },
-                              { label: "Gold Ambient Glow", val: "gold_glow" },
-                              { label: "Hard Brutalist Offset", val: "hard_brutalist" },
-                              { label: "Clay 3D Puffy", val: "clay_3d" },
-                              { label: "Tactile Neumorphic", val: "neumorphic" },
-                              { label: "Neon Aura", val: "neon" },
-                            ].map((s) => (
-                              <button
-                                key={s.val}
-                                type="button"
-                                onClick={() => updateCardDesignProperty({ shadowStyle: s.val as any })}
-                                className={`text-[11px] font-semibold px-3 py-1.5 rounded-xl border transition-all ${
-                                  currentDesign.shadowStyle === s.val
-                                    ? "bg-[#D4AF37] border-[#D4AF37] text-white shadow-xs"
-                                    : "bg-white border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
-                                }`}
-                              >
-                                {s.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Surface Style */}
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
-                            Surface Finish
-                          </label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {[
-                              { label: "Solid Card", val: "solid" },
-                              { label: "Frosted Glass", val: "glass" },
-                              { label: "Translucent Acrylic", val: "translucent" },
-                              { label: "Tactile Clay", val: "clay" },
-                              { label: "Organic Linen", val: "linen" },
-                              { label: "Cyber Metallic", val: "metallic" },
-                              { label: "Shimmer Gradient", val: "gradient" },
-                            ].map((sf) => (
-                              <button
-                                key={sf.val}
-                                type="button"
-                                onClick={() => updateCardDesignProperty({ surfaceStyle: sf.val as any })}
-                                className={`text-[11px] font-semibold px-3 py-1.5 rounded-xl border transition-all ${
-                                  currentDesign.surfaceStyle === sf.val
-                                    ? "bg-[#D4AF37] border-[#D4AF37] text-white shadow-xs"
-                                    : "bg-white border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
-                                }`}
-                              >
-                                {sf.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Hover Effect */}
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
-                            Hover Interaction
-                          </label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {[
-                              { label: "Smooth Lift (-4px)", val: "lift" },
-                              { label: "Subtle Scale (101.5%)", val: "scale" },
-                              { label: "Halo Glow Ring", val: "glow" },
-                              { label: "Snappy Bounce", val: "bounce" },
-                              { label: "Subtle 3D Tilt", val: "tilt" },
-                              { label: "Whisper Shimmer", val: "shimmer" },
-                            ].map((h) => (
-                              <button
-                                key={h.val}
-                                type="button"
-                                onClick={() => updateCardDesignProperty({ hoverEffect: h.val as any })}
-                                className={`text-[11px] font-semibold px-3 py-1.5 rounded-xl border transition-all ${
-                                  currentDesign.hoverEffect === h.val
-                                    ? "bg-[#D4AF37] border-[#D4AF37] text-white shadow-xs"
-                                    : "bg-white border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
-                                }`}
-                              >
-                                {h.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* Category Filter Pills */}
-              <div className="space-y-3 bg-white p-4 rounded-2xl border border-[#E5E0D2] shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#1A1C20]">Filter Designs by Aesthetic Category</span>
-                  <span className="text-[10px] text-[#918355]">
-                    {selectedCardCategory === "All" 
-                      ? `${CARD_DESIGN_PRESETS.length} presets` 
-                      : `${CARD_DESIGN_PRESETS.filter(p => p.category === selectedCardCategory).length} presets`}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {["All", "Luxury & Atelier", "Modern & Bento", "Creative & 3D", "Minimal & Technical"].map((cat) => {
-                    const count = cat === "All" 
-                      ? CARD_DESIGN_PRESETS.length 
-                      : CARD_DESIGN_PRESETS.filter(p => p.category === cat).length;
-                    const isActive = selectedCardCategory === cat;
-                    return (
-                      <button
-                        key={cat}
-                        onClick={() => setSelectedCardCategory(cat)}
-                        className={`text-[11px] font-semibold px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 ${
-                          isActive
-                            ? "bg-[#D4AF37] border-[#D4AF37] text-white shadow-xs"
-                            : "bg-[#F9F9F7] border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
-                        }`}
-                      >
-                        <span>{cat}</span>
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${isActive ? "bg-white/30 text-white" : "bg-black/5 text-[#918355]"}`}>
-                          {count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Card Design Gallery Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {CARD_DESIGN_PRESETS
-                  .filter((preset) => selectedCardCategory === "All" || preset.category === selectedCardCategory)
-                  .map((preset) => {
-                    const isCurrent = (profile.cardDesign?.presetId || "luxury_gold") === preset.id;
-                    const previewWrapperClasses = getCardWrapperClasses(preset.config);
-                    const previewWrapperStyles = getCardWrapperStyle(preset.config, profile.theme.palette);
-
-                    return (
-                      <div
-                        key={preset.id}
-                        className={`p-5 rounded-3xl border-2 transition-all flex flex-col justify-between gap-4 bg-white relative ${
-                          isCurrent
-                            ? "border-[#D4AF37] ring-2 ring-[#D4AF37]/25 shadow-md"
-                            : "border-[#E5E0D2] hover:border-[#D4AF37]/60 hover:shadow-sm"
-                        }`}
-                      >
-                        {/* Preset Card Header */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-sm font-bold text-[#1A1C20]">{preset.name}</h3>
-                              <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-[#D4AF37] border border-amber-200">
-                                {preset.category}
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-[#918355] mt-0.5">
-                              {preset.tagline}
-                            </p>
-                          </div>
-
-                          {isCurrent && (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#D4AF37] text-white uppercase tracking-wider flex items-center gap-1 shrink-0">
-                              <Check className="w-3 h-3" />
-                              Active
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Interactive Realistic Card Mockup */}
-                        <div 
-                          className="p-3 rounded-2xl border transition-colors"
-                          style={{
-                            backgroundColor: profile.theme.palette.background,
-                            borderColor: profile.theme.palette.border,
-                          }}
-                        >
-                          <div 
-                            className={previewWrapperClasses}
-                            style={previewWrapperStyles}
-                          >
-                            <div className="p-3 flex items-center justify-between gap-2.5">
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div 
-                                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-2xs"
-                                  style={{ 
-                                    backgroundColor: `${profile.theme.palette.accentGold || preset.preview.accentColor}22`, 
-                                    color: profile.theme.palette.accentGold || preset.preview.accentColor 
-                                  }}
-                                >
-                                  <Sparkles className="w-4 h-4" />
-                                </div>
-                                <div className="min-w-0">
-                                  <div 
-                                    className="text-[11px] font-bold truncate"
-                                    style={{ color: profile.theme.palette.primaryText }}
-                                  >
-                                    {preset.preview.sampleTitle}
-                                  </div>
-                                  <div 
-                                    className="text-[9px] truncate"
-                                    style={{ color: profile.theme.palette.secondaryText }}
-                                  >
-                                    {preset.preview.sampleSubtitle}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div 
-                                className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 shadow-2xs"
-                                style={{ 
-                                  backgroundColor: profile.theme.palette.accentGold || preset.preview.accentColor,
-                                  color: profile.theme.palette.buttonText || "#1A1C20",
-                                }}
-                              >
-                                <ChevronRight className="w-3 h-3" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Design Description & Spec Tags */}
-                        <div className="space-y-2">
-                          <p className="text-[11px] text-[#918355] leading-relaxed">
-                            {preset.description}
-                          </p>
-
-                          <div className="flex flex-wrap gap-1 text-[9px] text-[#918355]">
-                            <span className="px-2 py-0.5 rounded-md bg-[#F9F9F7] border border-[#E5E0D2]">
-                              {preset.config.borderRadius}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-[#F9F9F7] border border-[#E5E0D2]">
-                              {preset.config.borderStyle}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-[#F9F9F7] border border-[#E5E0D2]">
-                              {preset.config.shadowStyle}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-[#F9F9F7] border border-[#E5E0D2]">
-                              {preset.config.hoverEffect}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="pt-2 border-t border-gray-100 flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => applyCardDesignPreset(preset)}
-                            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 ${
-                              isCurrent
-                                ? "bg-emerald-600 text-white"
-                                : "bg-[#D4AF37] hover:bg-[#b8962e] text-[#1A1C20] active:scale-95"
-                            }`}
-                          >
-                            {isCurrent ? (
-                              <>
-                                <Check className="w-3.5 h-3.5" />
-                                <span>Active on Profile</span>
-                              </>
-                            ) : (
-                              <>
-                                <LayoutTemplate className="w-3.5 h-3.5" />
-                                <span>Use This Design</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
           {activeTab === "appearance" && (
-            <div className="p-8 max-w-2xl w-full mx-auto space-y-6">
-              <div>
-                <h2 className="text-xl font-display font-bold">Themes & Styling</h2>
-                <p className="text-xs text-[#918355] mt-0.5">
-                  Choose authentic creator theme palettes inspired by Instagram, LinkedIn, X, and YouTube aesthetics.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {CURATED_PLATFORM_THEMES.map((themePreset) => {
-                  const isSelected = profile.theme.id === themePreset.id;
-                  return (
-                    <div
-                      key={themePreset.id}
-                      onClick={() =>
-                        setProfile((p) => ({
-                          ...p,
-                          theme: themePreset,
-                          cardDesign: p.cardDesign ? {
-                            ...p.cardDesign,
-                            accentColor: themePreset.palette.accentGold,
-                          } : p.cardDesign,
-                        }))
-                      }
-                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${
-                        isSelected
-                          ? "border-[#D4AF37] ring-2 ring-[#D4AF37]/30 bg-white"
-                          : "border-[#E5E0D2] bg-white hover:border-[#D4AF37]/50"
-                      }`}
-                      style={{
-                        backgroundColor: themePreset.palette.background === "#0A0A0C" || themePreset.palette.background === "#121214" || themePreset.palette.background === "#0E0E12" || themePreset.palette.background === "#0F1115"
-                          ? themePreset.palette.background
-                          : "#FFFFFF",
-                        color: themePreset.palette.primaryText,
-                      }}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <span
-                          className="w-4 h-4 rounded-full border border-black/10 shadow-xs"
-                          style={{ backgroundColor: themePreset.palette.accentGold }}
-                        />
-                        <span
-                          className="w-4 h-4 rounded-full border border-black/10 shadow-xs"
-                          style={{ backgroundColor: themePreset.palette.cardBackground }}
-                        />
-                        <span
-                          className="w-4 h-4 rounded-full border border-black/10 shadow-xs"
-                          style={{ backgroundColor: themePreset.palette.primaryText }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold">{themePreset.name}</h4>
-                        {isSelected && (
-                          <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
-                        )}
-                      </div>
-                      <p className="text-[10px] opacity-70 mt-0.5">
-                        {themePreset.typography.headingFont} • {themePreset.geometry.buttonRadius}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <ThemeAndStylingPanel
+              profile={profile}
+              setProfile={setProfile}
+              activeSubTab={appearanceSubTab}
+              onSubTabChange={setAppearanceSubTab}
+              selectedBlockTitle={selectedBlock?.title}
+              onDeselectBlock={() => setSelectedBlockId(null)}
+            />
           )}
 
           {activeTab === "analytics" && (
@@ -3370,119 +2652,6 @@ export default function StudioBuilderPage() {
         </div>
       )}
 
-      {/* Block Deletion Confirmation Modal: Archive vs Delete Permanently */}
-      {blockToDelete && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
-          onClick={() => setBlockToDelete(null)}
-        >
-          <div 
-            className="w-full max-w-md bg-white rounded-3xl border border-[#E5E0D2] shadow-2xl p-6 space-y-5 animate-in zoom-in-95 duration-150"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header with Icon & Title */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-[#D4AF37] shrink-0 shadow-2xs">
-                  <AlertTriangle className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-[#1A1C20]">Delete or Archive Block?</h3>
-                  <p className="text-xs text-[#918355] mt-0.5">
-                    Choose how you want to handle this content block.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setBlockToDelete(null)}
-                className="p-1.5 rounded-xl text-neutral-400 hover:text-black hover:bg-neutral-100 transition-colors"
-              >
-                <XIcon className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Target Block Card Preview */}
-            <div className="p-3.5 rounded-2xl border border-[#E5E0D2] bg-[#FAF9F5] flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white border border-[#E5E0D2] flex items-center justify-center shrink-0">
-                {"highlightCoverUrl" in blockToDelete && (blockToDelete as any).highlightCoverUrl ? (
-                  <img src={(blockToDelete as any).highlightCoverUrl} alt="" className="w-full h-full object-cover rounded-xl" />
-                ) : "thumbnailUrl" in blockToDelete && (blockToDelete as any).thumbnailUrl ? (
-                  <img src={(blockToDelete as any).thumbnailUrl} alt="" className="w-full h-full object-cover rounded-xl" />
-                ) : (
-                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#1A1C20] truncate">
-                    {blockToDelete.title || "Untitled Block"}
-                  </span>
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white border border-[#E5E0D2] text-[#918355]">
-                    {blockToDelete.type.replace("_", " ")}
-                  </span>
-                </div>
-                {blockToDelete.subtitle && (
-                  <p className="text-[10px] text-[#918355] truncate mt-0.5">{blockToDelete.subtitle}</p>
-                )}
-              </div>
-            </div>
-
-            {/* 2 Big Action Cards: Archive vs Delete */}
-            <div className="space-y-3">
-              {/* Option 1: Archive (Recommended) */}
-              <button
-                type="button"
-                onClick={() => handleArchiveBlock(blockToDelete.id)}
-                className="w-full p-4 rounded-2xl border-2 border-[#D4AF37] bg-[#FAF8F2] hover:bg-[#F5F0E1] transition-all flex items-start gap-3.5 text-left group shadow-xs active:scale-[0.99]"
-              >
-                <div className="w-9 h-9 rounded-xl bg-[#D4AF37] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                  <Archive className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#1A1C20]">Archive Block</span>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#D4AF37] text-white uppercase tracking-wider">
-                      Recommended
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#918355] mt-1 leading-relaxed">
-                    Hides this block from your live profile and stores it in your Archive section. All links, images, and settings are preserved so you can restore it anytime.
-                  </p>
-                </div>
-              </button>
-
-              {/* Option 2: Delete Permanently */}
-              <button
-                type="button"
-                onClick={() => handlePermanentDelete(blockToDelete.id)}
-                className="w-full p-4 rounded-2xl border border-red-200 bg-white hover:bg-red-50/60 hover:border-red-400 transition-all flex items-start gap-3.5 text-left group active:scale-[0.99]"
-              >
-                <div className="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <Trash2 className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-bold text-red-600 group-hover:text-red-700">Delete Permanently</span>
-                  <p className="text-[11px] text-neutral-500 mt-1 leading-relaxed">
-                    Permanently deletes this block and removes all configured data. This action cannot be undone.
-                  </p>
-                </div>
-              </button>
-            </div>
-
-            {/* Cancel Button */}
-            <div className="pt-1 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setBlockToDelete(null)}
-                className="px-5 py-2 rounded-xl border border-[#E5E0D2] bg-white hover:bg-neutral-50 text-xs font-semibold text-[#1A1C20] transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
