@@ -1,4 +1,5 @@
 import { AsoobiProfileDocument } from "@/types/builder";
+import { DEFAULT_CARD_DESIGN } from "@/lib/cardDesigns";
 
 export const INITIAL_PROFILE_DATA: AsoobiProfileDocument = {
   id: "profile-asoobi-demo",
@@ -37,6 +38,7 @@ export const INITIAL_PROFILE_DATA: AsoobiProfileDocument = {
       buttonStyle: "shadow_gold",
     },
   },
+  cardDesign: DEFAULT_CARD_DESIGN,
   blocks: [
     {
       id: "block-1",

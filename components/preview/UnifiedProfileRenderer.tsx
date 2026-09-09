@@ -25,6 +25,7 @@ import {
   TikTokIcon, 
   SpotifyIcon 
 } from "@/components/icons/PlatformIcons";
+import { getCardWrapperClasses, getCardWrapperStyle } from "@/lib/cardDesigns";
 
 interface UnifiedProfileRendererProps {
   profile: AsoobiProfileDocument;
@@ -35,7 +36,9 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
   profile,
   isInteractive = true,
 }) => {
-  const { meta, theme, blocks } = profile;
+  const { meta, theme, blocks, cardDesign } = profile;
+  const cardClasses = getCardWrapperClasses(cardDesign);
+  const cardStyles = getCardWrapperStyle(cardDesign, theme.palette);
   const [unlockedBlocks, setUnlockedBlocks] = useState<Record<string, boolean>>({});
   const [passwordInputs, setPasswordInputs] = useState<Record<string, string>>({});
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
@@ -116,7 +119,10 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
           {profile.isVerified && (
             <div 
               className="absolute bottom-1 right-1 rounded-full p-1 shadow-md"
-              style={{ backgroundColor: theme.palette.accentGold, color: "#1A1C20" }}
+              style={{ 
+                backgroundColor: theme.palette.accentGold, 
+                color: theme.palette.buttonText || "#1A1C20" 
+              }}
               title="Verified Asoobi Creator"
             >
               <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -153,12 +159,8 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                 return (
                   <div
                     key={block.id}
-                    className="w-full rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.01]"
-                    style={{
-                      backgroundColor: theme.palette.cardBackground,
-                      borderColor: theme.palette.border,
-                      boxShadow: "0 8px 30px -4px rgba(212,175,55,0.18)",
-                    }}
+                    className={cardClasses}
+                    style={cardStyles}
                   >
                     {block.highlightCoverUrl && (
                       <div className="w-full h-36 relative overflow-hidden">
@@ -172,7 +174,7 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                             className="absolute top-3 left-3 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full shadow-lg"
                             style={{
                               backgroundColor: theme.palette.accentGold,
-                              color: "#1A1C20",
+                              color: theme.palette.buttonText || "#1A1C20",
                             }}
                           >
                             {block.badgeText}
@@ -182,7 +184,7 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                     )}
                     <div className="p-4 flex flex-col gap-2">
                       <div>
-                        <h2 className="text-base font-bold tracking-tight">{block.title}</h2>
+                        <h2 className="text-base font-bold tracking-tight" style={{ color: theme.palette.primaryText }}>{block.title}</h2>
                         {block.subtitle && (
                           <p className="text-xs opacity-75 mt-0.5" style={{ color: theme.palette.secondaryText }}>
                             {block.subtitle}
@@ -196,7 +198,7 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                         className="mt-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold tracking-wide uppercase transition-all shadow-md active:scale-95"
                         style={{
                           backgroundColor: theme.palette.accentGold,
-                          color: "#1A1C20",
+                          color: theme.palette.buttonText || "#1A1C20",
                         }}
                       >
                         {block.callToAction}
@@ -210,22 +212,25 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                 return (
                   <div
                     key={block.id}
-                    className="w-full rounded-xl border transition-all duration-200 overflow-hidden"
-                    style={{
-                      backgroundColor: theme.palette.cardBackground,
-                      borderColor: theme.palette.border,
-                    }}
+                    className={cardClasses}
+                    style={cardStyles}
                   >
                     {isLocked ? (
                       <div className="p-3.5 flex flex-col gap-2.5">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
-                            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                            <div 
+                              className="p-2 rounded-lg"
+                              style={{
+                                backgroundColor: `${theme.palette.accentGold}22`,
+                                color: theme.palette.accentGold,
+                              }}
+                            >
                               <Lock className="w-4 h-4" />
                             </div>
                             <div>
-                              <h3 className="text-xs font-semibold">{block.title}</h3>
-                              <p className="text-[10px] opacity-70">Password required</p>
+                              <h3 className="text-xs font-semibold" style={{ color: theme.palette.primaryText }}>{block.title}</h3>
+                              <p className="text-[10px] opacity-70" style={{ color: theme.palette.secondaryText }}>Password required</p>
                             </div>
                           </div>
                         </div>
@@ -240,15 +245,15 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                                 [block.id]: e.target.value,
                               }))
                             }
-                            className="flex-1 text-xs px-3 py-1.5 rounded-lg border bg-transparent focus:outline-none focus:ring-1 focus:ring-amber-500"
-                            style={{ borderColor: theme.palette.border }}
+                            className="flex-1 text-xs px-3 py-1.5 rounded-lg border bg-transparent focus:outline-none focus:ring-1"
+                            style={{ borderColor: theme.palette.border, color: theme.palette.primaryText }}
                           />
                           <button
                             onClick={() => handleUnlock(block.id, block.accessRules.password)}
                             className="px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm"
                             style={{
                               backgroundColor: theme.palette.accentGold,
-                              color: "#1A1C20",
+                              color: theme.palette.buttonText || "#1A1C20",
                             }}
                           >
                             Unlock
@@ -265,7 +270,7 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                         href={isInteractive ? block.url : undefined}
                         target={block.openInNewTab ? "_blank" : "_self"}
                         rel="noreferrer"
-                        className="flex items-center p-3 gap-3.5 hover:bg-black/5 transition-colors group relative"
+                        className="flex items-center p-3 gap-3.5 hover:opacity-90 transition-opacity group relative"
                       >
                         {block.thumbnailUrl ? (
                           <img
@@ -283,17 +288,23 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                         )}
                         <div className="flex-1 min-w-0 pr-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-xs font-semibold truncate group-hover:text-amber-600 transition-colors">
+                            <h3 
+                              className="text-xs font-semibold truncate transition-colors"
+                              style={{ color: theme.palette.primaryText }}
+                            >
                               {block.title}
                             </h3>
                           </div>
                           {block.subtitle && (
-                            <p className="text-[10px] opacity-70 truncate mt-0.5">
+                            <p className="text-[10px] opacity-70 truncate mt-0.5" style={{ color: theme.palette.secondaryText }}>
                               {block.subtitle}
                             </p>
                           )}
                         </div>
-                        <ExternalLink className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
+                        <ExternalLink 
+                          className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" 
+                          style={{ color: theme.palette.secondaryText }}
+                        />
                       </a>
                     )}
                   </div>
@@ -304,11 +315,8 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                 return (
                   <div
                     key={block.id}
-                    className="w-full rounded-2xl border overflow-hidden"
-                    style={{
-                      backgroundColor: theme.palette.cardBackground,
-                      borderColor: theme.palette.border,
-                    }}
+                    className={cardClasses}
+                    style={cardStyles}
                   >
                     <button
                       onClick={() =>
@@ -323,12 +331,12 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                         <span className="text-[10px] font-bold tracking-wider uppercase opacity-60" style={{ color: theme.palette.secondaryText }}>
                           Collection
                         </span>
-                        <h3 className="text-xs font-bold">{block.title}</h3>
+                        <h3 className="text-xs font-bold" style={{ color: theme.palette.primaryText }}>{block.title}</h3>
                       </div>
                       {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 opacity-60" />
+                        <ChevronUp className="w-4 h-4 opacity-60" style={{ color: theme.palette.secondaryText }} />
                       ) : (
-                        <ChevronDown className="w-4 h-4 opacity-60" />
+                        <ChevronDown className="w-4 h-4 opacity-60" style={{ color: theme.palette.secondaryText }} />
                       )}
                     </button>
 
@@ -340,15 +348,19 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                             href={isInteractive ? item.url : undefined}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex flex-col items-center text-center p-2 rounded-xl border hover:border-amber-400 transition-all bg-black/[0.02]"
-                            style={{ borderColor: theme.palette.border }}
+                            className="flex flex-col items-center text-center p-2 rounded-xl border hover:opacity-90 transition-all"
+                            style={{ 
+                              borderColor: theme.palette.border,
+                              backgroundColor: `${theme.palette.background}80`,
+                              color: theme.palette.primaryText,
+                            }}
                           >
                             <img
                               src={item.thumbnailUrl}
                               alt={item.title}
                               className="w-full h-16 object-cover rounded-lg mb-1.5"
                             />
-                            <span className="text-[10px] font-medium leading-tight truncate w-full">
+                            <span className="text-[10px] font-medium leading-tight truncate w-full" style={{ color: theme.palette.primaryText }}>
                               {item.title}
                             </span>
                             {item.price && (
@@ -368,25 +380,28 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                 return (
                   <div
                     key={block.id}
-                    className="w-full p-3.5 rounded-xl border flex items-center justify-between gap-3"
-                    style={{
-                      backgroundColor: theme.palette.cardBackground,
-                      borderColor: theme.palette.border,
-                    }}
+                    className={`${cardClasses} p-3.5 flex items-center justify-between gap-3`}
+                    style={cardStyles}
                   >
                     <div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-600">
+                      <span 
+                        className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                        style={{
+                          backgroundColor: `${theme.palette.accentGold}22`,
+                          color: theme.palette.accentGold,
+                        }}
+                      >
                         {block.discountPercentageOrValue}
                       </span>
-                      <h4 className="text-xs font-bold mt-1">{block.title}</h4>
-                      <p className="text-[10px] opacity-70">{block.subtitle}</p>
+                      <h4 className="text-xs font-bold mt-1" style={{ color: theme.palette.primaryText }}>{block.title}</h4>
+                      <p className="text-[10px] opacity-70" style={{ color: theme.palette.secondaryText }}>{block.subtitle}</p>
                     </div>
                     <button
                       onClick={() => handleCopyDiscount(block.code)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold tracking-wider transition-all shadow-sm active:scale-95"
                       style={{
                         backgroundColor: isCopied ? "#10B981" : theme.palette.accentGold,
-                        color: isCopied ? "#FFFFFF" : "#1A1C20",
+                        color: isCopied ? "#FFFFFF" : (theme.palette.buttonText || "#1A1C20"),
                       }}
                     >
                       {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -400,19 +415,16 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                 return (
                   <div
                     key={block.id}
-                    className="w-full p-4 rounded-2xl border"
-                    style={{
-                      backgroundColor: theme.palette.cardBackground,
-                      borderColor: theme.palette.border,
-                    }}
+                    className={`${cardClasses} p-4`}
+                    style={cardStyles}
                   >
-                    <h3 className="text-xs font-bold">{block.title}</h3>
-                    <p className="text-[10px] opacity-70 mb-3">{block.subtitle}</p>
+                    <h3 className="text-xs font-bold" style={{ color: theme.palette.primaryText }}>{block.title}</h3>
+                    <p className="text-[10px] opacity-70 mb-3" style={{ color: theme.palette.secondaryText }}>{block.subtitle}</p>
 
                     {hasSent ? (
                       <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center">
                         <Check className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
-                        <p className="text-[10px] text-emerald-700 font-medium">
+                        <p className="text-[10px] text-emerald-600 font-medium">
                           {block.successMessage}
                         </p>
                       </div>
@@ -429,33 +441,33 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                             type="text"
                             required
                             placeholder="Your Name"
-                            className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-1 focus:ring-amber-500"
-                            style={{ borderColor: theme.palette.border }}
+                            className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none"
+                            style={{ borderColor: theme.palette.border, color: theme.palette.primaryText }}
                           />
                         )}
                         <input
                           type="email"
                           required
                           placeholder="Your Email Address"
-                          className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-1 focus:ring-amber-500"
-                          style={{ borderColor: theme.palette.border }}
+                          className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none"
+                          style={{ borderColor: theme.palette.border, color: theme.palette.primaryText }}
                         />
                         {block.fields.collectPhone && (
                           <input
                             type="tel"
                             placeholder="Phone Number / WhatsApp"
-                            className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-1 focus:ring-amber-500"
-                            style={{ borderColor: theme.palette.border }}
+                            className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none"
+                            style={{ borderColor: theme.palette.border, color: theme.palette.primaryText }}
                           />
                         )}
                         {block.customFields && block.customFields.map((field) => {
                           if (field.type === "select" && field.options) {
                             return (
                               <div key={field.id} className="space-y-1">
-                                <label className="text-[10px] font-medium opacity-80 block">{field.label}</label>
+                                <label className="text-[10px] font-medium opacity-80 block" style={{ color: theme.palette.secondaryText }}>{field.label}</label>
                                 <select
                                   required={field.required}
-                                  className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                  className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none"
                                   style={{ borderColor: theme.palette.border, color: theme.palette.primaryText }}
                                 >
                                   <option value="" className="text-gray-500">Select option...</option>
@@ -472,8 +484,8 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                                 required={field.required}
                                 rows={2}
                                 placeholder={field.placeholder || field.label}
-                                className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none"
-                                style={{ borderColor: theme.palette.border }}
+                                className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none resize-none"
+                                style={{ borderColor: theme.palette.border, color: theme.palette.primaryText }}
                               />
                             );
                           } else {
@@ -483,8 +495,8 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                                 type={field.type === "date" ? "date" : "text"}
                                 required={field.required}
                                 placeholder={field.placeholder || field.label}
-                                className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-1 focus:ring-amber-500"
-                                style={{ borderColor: theme.palette.border }}
+                                className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none"
+                                style={{ borderColor: theme.palette.border, color: theme.palette.primaryText }}
                               />
                             );
                           }
@@ -493,8 +505,8 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                           <textarea
                             rows={2}
                             placeholder="Brief project details..."
-                            className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none"
-                            style={{ borderColor: theme.palette.border }}
+                            className="w-full text-xs px-3 py-2 rounded-lg border bg-transparent focus:outline-none resize-none"
+                            style={{ borderColor: theme.palette.border, color: theme.palette.primaryText }}
                           />
                         )}
                         <button
@@ -502,7 +514,7 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                           className="w-full py-2 px-4 rounded-lg text-xs font-bold tracking-wide uppercase flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
                           style={{
                             backgroundColor: theme.palette.accentGold,
-                            color: "#1A1C20",
+                            color: theme.palette.buttonText || "#1A1C20",
                           }}
                         >
                           <Send className="w-3 h-3" />
@@ -535,7 +547,7 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                           className="w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-transform hover:scale-110"
                           style={{
                             backgroundColor: theme.palette.accentGold,
-                            color: "#1A1C20",
+                            color: theme.palette.buttonText || "#1A1C20",
                           }}
                         >
                           {iconElement}
@@ -549,14 +561,11 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                 return (
                   <div
                     key={block.id}
-                    className="w-full p-4 rounded-2xl border flex flex-col items-center justify-center gap-3 text-center"
-                    style={{
-                      backgroundColor: theme.palette.cardBackground,
-                      borderColor: theme.palette.border,
-                    }}
+                    className={`${cardClasses} p-4 flex flex-col items-center justify-center gap-3 text-center`}
+                    style={cardStyles}
                   >
                     <div>
-                      <h3 className="text-xs font-bold">{block.title}</h3>
+                      <h3 className="text-xs font-bold" style={{ color: theme.palette.primaryText }}>{block.title}</h3>
                       {block.subtitle && (
                         <p className="text-[10px] opacity-70 mt-0.5" style={{ color: theme.palette.secondaryText }}>
                           {block.subtitle}
@@ -579,7 +588,7 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                       className="text-[11px] font-semibold flex items-center gap-1.5 px-4 py-2 rounded-xl shadow-xs transition-all active:scale-95"
                       style={{
                         backgroundColor: theme.palette.accentGold,
-                        color: "#1A1C20",
+                        color: theme.palette.buttonText || "#1A1C20",
                       }}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -592,22 +601,25 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                 return (
                   <div
                     key={block.id}
-                    className="w-full p-4 rounded-2xl border space-y-3"
-                    style={{
-                      backgroundColor: theme.palette.cardBackground,
-                      borderColor: theme.palette.border,
-                    }}
+                    className={`${cardClasses} p-4 space-y-3`}
+                    style={cardStyles}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-600">
+                        <span 
+                          className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                          style={{
+                            backgroundColor: `${theme.palette.accentGold}22`,
+                            color: theme.palette.accentGold,
+                          }}
+                        >
                           {block.badgeLabel || "Support"}
                         </span>
-                        <h4 className="text-xs font-bold mt-1">{block.bannerTitle || block.title}</h4>
+                        <h4 className="text-xs font-bold mt-1" style={{ color: theme.palette.primaryText }}>{block.bannerTitle || block.title}</h4>
                       </div>
                     </div>
                     {block.description && (
-                      <p className="text-[10px] opacity-75">{block.description}</p>
+                      <p className="text-[10px] opacity-75" style={{ color: theme.palette.secondaryText }}>{block.description}</p>
                     )}
                     {block.presetAmounts && block.presetAmounts.length > 0 && (
                       <div className="flex gap-2">
@@ -617,8 +629,11 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                             href={isInteractive ? block.paymentDestinationUrl : undefined}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex-1 py-1.5 rounded-lg border text-center text-xs font-bold transition-all hover:border-[#D4AF37]"
-                            style={{ borderColor: theme.palette.border }}
+                            className="flex-1 py-1.5 rounded-lg border text-center text-xs font-bold transition-all hover:opacity-80"
+                            style={{ 
+                              borderColor: theme.palette.border,
+                              color: theme.palette.primaryText,
+                            }}
                           >
                             ${amt}
                           </a>
@@ -632,7 +647,7 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
                       className="w-full py-2 px-4 rounded-xl text-xs font-bold tracking-wide uppercase flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-95"
                       style={{
                         backgroundColor: theme.palette.accentGold,
-                        color: "#1A1C20",
+                        color: theme.palette.buttonText || "#1A1C20",
                       }}
                     >
                       Support Now
@@ -649,8 +664,8 @@ export const UnifiedProfileRenderer: React.FC<UnifiedProfileRendererProps> = ({
 
         {/* Footer Brand Credit */}
         <div className="mt-8 flex items-center gap-1.5 opacity-60 text-[10px] font-semibold tracking-wider uppercase">
-          <span>Powered by</span>
-          <span className="font-bold tracking-widest text-amber-600">ASOOBI</span>
+          <span style={{ color: theme.palette.secondaryText }}>Powered by</span>
+          <span className="font-bold tracking-widest" style={{ color: theme.palette.accentGold }}>ASOOBI</span>
         </div>
       </div>
     </div>

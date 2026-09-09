@@ -163,6 +163,42 @@ export interface ProfileThemeConfig {
   };
 }
 
+export type CardDesignPresetId = 
+  | 'luxury_gold'
+  | 'glassmorphism'
+  | 'bento_tile'
+  | 'cupertino_glass'
+  | 'neo_brutalist'
+  | 'claymorphism'
+  | 'soft_neumorphic'
+  | 'minimal_flat'
+  | 'technical_mono'
+  | 'swiss_grid'
+  | 'aurora_glow'
+  | 'y2k_chrome'
+  | 'floating_elevation'
+  | 'retro_editorial'
+  | 'leather_stitch'
+  | 'horology_gilded'
+  | 'outline_pill'
+  | 'cyber_neon'
+  | 'compact_tile'
+  | 'midnight_velvet'
+  | 'wabi_sabi'
+  | 'holographic_foil';
+
+export interface CardDesignConfig {
+  presetId: CardDesignPresetId;
+  name: string;
+  borderRadius: string;
+  borderStyle: 'none' | 'subtle' | 'gold_accent' | 'brutalist_bold' | 'double_editorial' | 'glow' | 'dashed' | 'leather_stitch' | 'chrome_metallic' | 'rainbow_prism';
+  shadowStyle: 'none' | 'soft' | 'floating' | 'gold_glow' | 'hard_brutalist' | 'neumorphic' | 'neon' | 'clay_3d' | 'ambient_spread' | 'inner_recessed';
+  surfaceStyle: 'solid' | 'glass' | 'translucent' | 'gradient' | 'inset' | 'clay' | 'metallic' | 'linen';
+  hoverEffect: 'lift' | 'scale' | 'glow' | 'invert' | 'shimmer' | 'bounce' | 'tilt';
+  padding: 'compact' | 'normal' | 'spacious';
+  accentColor?: string;
+}
+
 export interface AsoobiProfileDocument {
   id: string;
   handle: string;
@@ -178,5 +214,6 @@ export interface AsoobiProfileDocument {
     location?: string;
   };
   theme: ProfileThemeConfig;
+  cardDesign?: CardDesignConfig;
   blocks: ProfileBlock[];
 }
