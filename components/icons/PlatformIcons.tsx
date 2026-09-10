@@ -487,3 +487,34 @@ export const PlatformOfficialBadge: React.FC<PlatformOfficialBadgeProps> = ({
     </div>
   );
 };
+
+/**
+ * Official Blue Verification Badge (Scalloped verified tick)
+ * Authentic 12-point badge in vibrant verification blue (#0095F6) with crisp white checkmark
+ */
+export const BlueVerifiedBadge: React.FC<{ className?: string; title?: string }> = ({
+  className = "w-5 h-5",
+  title = "Verified Account",
+}) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={`inline-block shrink-0 ${className}`}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-label={title}
+  >
+    <title>{title}</title>
+    <path
+      d="M10.5213 2.62368C11.3147 1.75255 12.6853 1.75255 13.4787 2.62368L14.4989 3.74391C14.8998 4.18418 15.4761 4.42288 16.071 4.39508L17.5863 4.32431C18.7656 4.26922 19.7308 5.23441 19.6757 6.41369L19.6049 7.92902C19.5771 8.5239 19.8158 9.10018 20.2561 9.50111L21.3763 10.5213C22.2474 11.3147 22.2474 12.6853 21.3763 13.4787L20.2561 14.4989C19.8158 14.8998 19.5771 15.4761 19.6049 16.071L19.6757 17.5863C19.7308 18.7656 18.7656 19.7308 17.5863 19.6757L16.071 19.6049C15.4761 19.5771 14.8998 19.8158 14.4989 20.2561L13.4787 21.3763C12.6853 22.2474 11.3147 22.2474 10.5213 21.3763L9.50111 20.2561C9.10018 19.8158 8.5239 19.5771 7.92902 19.6049L6.41369 19.6757C5.23441 19.7308 4.26922 18.7656 4.32431 17.5863L4.39508 16.071C4.42288 15.4761 4.18418 14.8998 3.74391 14.4989L2.62368 13.4787C1.75255 12.6853 1.75255 11.3147 2.62368 10.5213L3.74391 9.50111C4.18418 9.10018 4.42288 8.5239 4.39508 7.92902L4.32431 6.41369C4.26922 5.23441 5.23441 4.26922 6.41369 4.32431L7.92902 4.39508C8.5239 4.42288 9.10018 4.18418 9.50111 3.74391L10.5213 2.62368Z"
+      fill="#0095F6"
+    />
+    <path
+      d="M9 12.2L11.2 14.4L15.8 9.6"
+      stroke="white"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+

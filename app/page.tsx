@@ -42,7 +42,10 @@ import {
   Upload,
   Clock,
   Link as LinkIcon,
-  Timer
+  Timer,
+  ShieldCheck,
+  KeyRound,
+  Globe
 } from "lucide-react";
 import { INITIAL_PROFILE_DATA } from "@/lib/initialData";
 import { AsoobiProfileDocument, ProfileBlock, BlockType, CardDesignConfig } from "@/types/builder";
@@ -67,7 +70,8 @@ import {
   TikTokIcon, 
   SpotifyIcon, 
   GitHubIcon, 
-  ThreadsIcon 
+  ThreadsIcon,
+  BlueVerifiedBadge
 } from "@/components/icons/PlatformIcons";
 
 export default function StudioBuilderPage() {
@@ -1053,8 +1057,17 @@ export default function StudioBuilderPage() {
                                   <span className="truncate">{(block.destinationUrl || (block as any).url)?.replace(/^https?:\/\//, "")}</span>
                                 </span>
                               )}
-                              {block.accessRules?.isLocked && !isArchived && (
-                                <Lock className="w-3 h-3 text-amber-600 shrink-0" />
+                              {!isArchived && (block.accessRules?.barrier === "protected" || block.accessRules?.isLocked) && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-50 border border-purple-300 text-purple-700 shrink-0 flex items-center gap-1" title={`Protected content • Password: ${block.accessRules?.password || 'Set'}`}>
+                                  <ShieldCheck className="w-2.5 h-2.5 text-purple-600" />
+                                  <span>Protected</span>
+                                </span>
+                              )}
+                              {!isArchived && block.accessRules?.barrier === "private" && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-neutral-100 border border-neutral-300 text-neutral-600 shrink-0 flex items-center gap-1" title="Private block (Hidden from public)">
+                                  <Lock className="w-2.5 h-2.5 text-neutral-500" />
+                                  <span>Private</span>
+                                </span>
                               )}
                             </div>
                             {block.subtitle && (
@@ -1252,29 +1265,66 @@ export default function StudioBuilderPage() {
                                   <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
                                   <span>Disappearance Timer</span>
                                 </label>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const nowEnabled = !block.disappearTimerEnabled;
-                                    const defaultExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-                                    updateBlock(block.id, {
-                                      disappearTimerEnabled: nowEnabled,
-                                      disappearAt: block.disappearAt || defaultExpiry,
-                                      disappearDurationHours: block.disappearDurationHours || 24,
-                                    } as any);
-                                  }}
-                                  className={`px-2.5 py-0.8 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                                <span
+                                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                                     block.disappearTimerEnabled
-                                      ? "bg-[#D4AF37] text-white shadow-2xs"
-                                      : "bg-[#EFECE6] text-[#918355] hover:bg-[#E5E0D2]"
+                                      ? new Date(block.disappearAt || "").getTime() <= Date.now()
+                                        ? "bg-red-100 text-red-700 border border-red-300"
+                                        : "bg-amber-100 text-amber-800 border border-amber-300"
+                                      : "bg-[#EFECE6] text-[#918355]"
                                   }`}
                                 >
-                                  {block.disappearTimerEnabled ? "Timer Active" : "Set Timer"}
-                                </button>
+                                  {block.disappearTimerEnabled ? (new Date(block.disappearAt || "").getTime() <= Date.now() ? "Expired" : "Timer Active") : "Never (Permanent)"}
+                                </span>
+                              </div>
+
+                              {/* Quick Duration Presets: 12h, 24h, 3d, 7d, 1 Month, Never */}
+                              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                                {[
+                                  { label: "12h", hours: 12 },
+                                  { label: "24h", hours: 24 },
+                                  { label: "3d", hours: 72 },
+                                  { label: "7d", hours: 168 },
+                                  { label: "1 Month", hours: 720 },
+                                  { label: "Never", hours: 0 },
+                                ].map((preset) => {
+                                  const isSelected = preset.hours === 0
+                                    ? !block.disappearTimerEnabled
+                                    : block.disappearTimerEnabled && block.disappearDurationHours === preset.hours;
+                                  return (
+                                    <button
+                                      key={preset.label}
+                                      type="button"
+                                      onClick={() => {
+                                        if (preset.hours === 0) {
+                                          updateBlock(block.id, {
+                                            disappearTimerEnabled: false,
+                                            disappearAt: undefined,
+                                            disappearDurationHours: undefined,
+                                          } as any);
+                                        } else {
+                                          const newExpiry = new Date(Date.now() + preset.hours * 60 * 60 * 1000).toISOString();
+                                          updateBlock(block.id, {
+                                            disappearTimerEnabled: true,
+                                            disappearAt: newExpiry,
+                                            disappearDurationHours: preset.hours,
+                                          } as any);
+                                        }
+                                      }}
+                                      className={`py-1.5 px-1 rounded-lg text-[10px] font-semibold text-center border transition-all cursor-pointer ${
+                                        isSelected
+                                          ? "bg-[#D4AF37] text-white border-[#D4AF37] shadow-xs font-bold"
+                                          : "bg-white border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
+                                      }`}
+                                    >
+                                      {preset.label}
+                                    </button>
+                                  );
+                                })}
                               </div>
 
                               {block.disappearTimerEnabled && (
-                                <div className="space-y-2 pt-1 border-t border-[#E5E0D2]/60 animate-in fade-in duration-150">
+                                <div className="space-y-2 pt-2 border-t border-[#E5E0D2]/60 animate-in fade-in duration-150">
                                   <div className="flex items-center justify-between text-[11px]">
                                     <span className="text-[#918355] font-medium">Auto-disappears after:</span>
                                     <span className="text-[10px] font-mono font-bold text-[#D4AF37] bg-white px-2 py-0.5 rounded-md border border-[#E5E0D2]">
@@ -1282,38 +1332,8 @@ export default function StudioBuilderPage() {
                                     </span>
                                   </div>
 
-                                  {/* Quick Duration Presets */}
-                                  <div className="grid grid-cols-5 gap-1">
-                                    {[
-                                      { label: "1h", hours: 1 },
-                                      { label: "12h", hours: 12 },
-                                      { label: "24h", hours: 24 },
-                                      { label: "3d", hours: 72 },
-                                      { label: "7d", hours: 168 },
-                                    ].map((preset) => (
-                                      <button
-                                        key={preset.hours}
-                                        type="button"
-                                        onClick={() => {
-                                          const newExpiry = new Date(Date.now() + preset.hours * 60 * 60 * 1000).toISOString();
-                                          updateBlock(block.id, {
-                                            disappearAt: newExpiry,
-                                            disappearDurationHours: preset.hours,
-                                          } as any);
-                                        }}
-                                        className={`py-1 px-1 rounded-lg text-[10px] font-semibold text-center border transition-all cursor-pointer ${
-                                          block.disappearDurationHours === preset.hours
-                                            ? "bg-[#D4AF37] text-white border-[#D4AF37]"
-                                            : "bg-white border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
-                                        }`}
-                                      >
-                                        {preset.label}
-                                      </button>
-                                    ))}
-                                  </div>
-
                                   {/* Custom Expiration Date & Time */}
-                                  <div className="pt-1">
+                                  <div className="pt-0.5">
                                     <label className="text-[10px] font-semibold text-[#918355] block mb-1">
                                       Custom Expiration Date & Time
                                     </label>
@@ -1338,6 +1358,125 @@ export default function StudioBuilderPage() {
                                       className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#E5E0D2] bg-white text-[#1A1C20] focus:outline-none focus:border-[#D4AF37]"
                                     />
                                   </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Universal Access Barrier (Public / Protected / Private) for EVERY block */}
+                            <div className="p-3.5 rounded-xl border border-[#E5E0D2] bg-[#FAF9F5] space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] flex items-center gap-1.5">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                  <span>Access Barrier</span>
+                                </label>
+                                <span
+                                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+                                    (block.accessRules?.barrier === "protected" || block.accessRules?.isLocked)
+                                      ? "bg-purple-100 text-purple-800 border border-purple-300"
+                                      : block.accessRules?.barrier === "private"
+                                      ? "bg-neutral-200 text-neutral-800 border border-neutral-300"
+                                      : "bg-emerald-50 text-emerald-800 border border-emerald-300"
+                                  }`}
+                                >
+                                  {block.accessRules?.barrier === "protected" || block.accessRules?.isLocked
+                                    ? "Protected"
+                                    : block.accessRules?.barrier === "private"
+                                    ? "Private"
+                                    : "Public"}
+                                </span>
+                              </div>
+
+                              {/* 3 Barrier Options: Public, Protected, Private */}
+                              <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                  { 
+                                    id: "public" as const, 
+                                    label: "Public", 
+                                    icon: <Globe className="w-3.5 h-3.5" />,
+                                    desc: "Open to all"
+                                  },
+                                  { 
+                                    id: "protected" as const, 
+                                    label: "Protected", 
+                                    icon: <ShieldCheck className="w-3.5 h-3.5" />,
+                                    desc: "Passcode gated"
+                                  },
+                                  { 
+                                    id: "private" as const, 
+                                    label: "Private", 
+                                    icon: <Lock className="w-3.5 h-3.5" />,
+                                    desc: "Creator only"
+                                  },
+                                ].map((bOption) => {
+                                  const currentBarrier = block.accessRules?.barrier || (block.accessRules?.isLocked ? "protected" : "public");
+                                  const isSelected = currentBarrier === bOption.id;
+                                  return (
+                                    <button
+                                      key={bOption.id}
+                                      type="button"
+                                      onClick={() => {
+                                        const isProtected = bOption.id === "protected";
+                                        updateBlock(block.id, {
+                                          accessRules: {
+                                            ...block.accessRules,
+                                            barrier: bOption.id,
+                                            isLocked: isProtected,
+                                            password: isProtected ? (block.accessRules?.password || "ASOOBI2026") : undefined,
+                                          },
+                                        } as any);
+                                      }}
+                                      className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex flex-col gap-0.5 ${
+                                        isSelected
+                                          ? "bg-[#D4AF37] text-white border-[#D4AF37] shadow-xs"
+                                          : "bg-white border-[#E5E0D2] text-[#1A1C20] hover:border-[#D4AF37]/50"
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-1.5">
+                                        {bOption.icon}
+                                        <span className="text-[11px] font-bold">{bOption.label}</span>
+                                      </div>
+                                      <span className={`text-[9px] ${isSelected ? "text-white/80" : "text-[#918355]"}`}>
+                                        {bOption.desc}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* If Protected, show password config */}
+                              {(block.accessRules?.barrier === "protected" || block.accessRules?.isLocked) && (
+                                <div className="pt-2 border-t border-[#E5E0D2]/60 space-y-1.5 animate-in fade-in duration-150">
+                                  <label className="text-[10px] font-semibold text-[#918355] flex items-center justify-between">
+                                    <span className="flex items-center gap-1">
+                                      <KeyRound className="w-3 h-3 text-[#D4AF37]" />
+                                      <span>Access Passcode / Password</span>
+                                    </span>
+                                    <span className="text-[9px] text-[#918355]">Required to unlock card</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="Enter access code (e.g. VIP2026)"
+                                    value={block.accessRules?.password || ""}
+                                    onChange={(e) => {
+                                      updateBlock(block.id, {
+                                        accessRules: {
+                                          ...block.accessRules,
+                                          barrier: "protected",
+                                          isLocked: true,
+                                          password: e.target.value,
+                                        },
+                                      } as any);
+                                    }}
+                                    className="w-full text-xs px-3 py-1.5 rounded-lg border border-[#E5E0D2] bg-white text-[#1A1C20] font-mono focus:outline-none focus:border-[#D4AF37]"
+                                  />
+                                </div>
+                              )}
+
+                              {/* If Private, show notice */}
+                              {block.accessRules?.barrier === "private" && (
+                                <div className="p-2 rounded-lg bg-neutral-100 border border-neutral-200 text-[10px] text-neutral-600 flex items-center gap-1.5 animate-in fade-in">
+                                  <Lock className="w-3 h-3 text-neutral-500 shrink-0" />
+                                  <span>This block is restricted as Private and will not be displayed to public visitors.</span>
                                 </div>
                               )}
                             </div>
@@ -1916,30 +2055,99 @@ export default function StudioBuilderPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block mb-1">
-                    Display Name
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.meta.title}
-                    onChange={(e) => setProfile((p) => ({ ...p, meta: { ...p.meta, title: e.target.value } }))}
-                    className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
+                      Display Name
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      {profile.isVerified && (
+                        <span className="text-[9px] text-[#0095F6] bg-[#EBF5FF] border border-[#B9E0FE] px-2 py-0.5 rounded-md flex items-center gap-1 font-semibold">
+                          <BlueVerifiedBadge className="w-2.5 h-2.5" />
+                          Verified Badge
+                        </span>
+                      )}
+                      <span className="text-[9px] text-[#918355] flex items-center gap-1 font-medium bg-[#F0EDE6] px-2 py-0.5 rounded-md">
+                        <Lock className="w-2.5 h-2.5 text-[#918355]" />
+                        Locked
+                      </span>
+                    </div>
+                  </div>
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      disabled
+                      readOnly
+                      value={profile.meta.title}
+                      className="w-full text-xs pl-3 pr-8 py-2 rounded-xl border border-[#E5E0D2] bg-[#F3F1EC] text-[#6E6756] cursor-not-allowed select-none opacity-85 font-semibold"
+                    />
+                    {profile.isVerified && (
+                      <div className="absolute right-2.5 flex items-center pointer-events-none" title="Verified Creator">
+                        <BlueVerifiedBadge className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block mb-1">
-                    Creator Handle
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
+                      Creator ID
+                    </label>
+                    <span className="text-[9px] text-[#918355] flex items-center gap-1 font-medium bg-[#F0EDE6] px-2 py-0.5 rounded-md">
+                      <Lock className="w-2.5 h-2.5 text-[#918355]" />
+                      Locked
+                    </span>
+                  </div>
                   <div className="flex items-center">
-                    <span className="px-3 py-2 bg-[#F9F9F7] border border-r-0 border-[#E5E0D2] rounded-l-xl text-xs text-[#918355]">
+                    <span className="px-3 py-2 bg-[#EBE7DF] border border-r-0 border-[#E5E0D2] rounded-l-xl text-xs text-[#918355] font-mono select-none">
                       asoobi.com/
                     </span>
                     <input
                       type="text"
+                      disabled
+                      readOnly
                       value={profile.handle}
-                      onChange={(e) => setProfile((p) => ({ ...p, handle: e.target.value }))}
-                      className="flex-1 text-xs px-3 py-2 rounded-r-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                      className="flex-1 text-xs px-3 py-2 rounded-r-xl border border-[#E5E0D2] bg-[#F3F1EC] text-[#6E6756] cursor-not-allowed select-none opacity-85 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
+                        Email Address
+                      </label>
+                      <span className="text-[9px] text-[#918355] flex items-center gap-1 font-medium bg-[#F0EDE6] px-2 py-0.5 rounded-md">
+                        <Lock className="w-2.5 h-2.5 text-[#918355]" />
+                        Locked
+                      </span>
+                    </div>
+                    <input
+                      type="email"
+                      disabled
+                      readOnly
+                      value={profile.meta.email || "elena.vance@asoobi.studio"}
+                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F3F1EC] text-[#6E6756] cursor-not-allowed select-none opacity-85"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block">
+                        Phone Number
+                      </label>
+                      <span className="text-[9px] text-[#918355] flex items-center gap-1 font-medium bg-[#F0EDE6] px-2 py-0.5 rounded-md">
+                        <Lock className="w-2.5 h-2.5 text-[#918355]" />
+                        Locked
+                      </span>
+                    </div>
+                    <input
+                      type="tel"
+                      disabled
+                      readOnly
+                      value={profile.meta.phone || "+39 02 8945 2201"}
+                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F3F1EC] text-[#6E6756] cursor-not-allowed select-none opacity-85"
                     />
                   </div>
                 </div>
@@ -1954,6 +2162,33 @@ export default function StudioBuilderPage() {
                     onChange={(e) => setProfile((p) => ({ ...p, meta: { ...p.meta, bio: e.target.value } }))}
                     className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
                   />
+                </div>
+
+                {/* Verification Badge Toggle & Controls */}
+                <div className="p-3.5 bg-[#FAF8F2] border border-[#E8E2D5] rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-[#EBF5FF] border border-[#B9E0FE] flex items-center justify-center shrink-0">
+                      <BlueVerifiedBadge className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-[#1A1C20]">Verified Badge (Blue Tick)</span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-[#0095F6] text-white">Official</span>
+                      </div>
+                      <p className="text-[11px] text-[#918355] mt-0.5">
+                        Displays authentic blue verification badge next to your creator display name.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={profile.isVerified}
+                      onChange={(e) => setProfile((p) => ({ ...p, isVerified: e.target.checked }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-[#E5E0D2] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#E5E0D2] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0095F6]"></div>
+                  </label>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -2457,6 +2692,181 @@ export default function StudioBuilderPage() {
               selectedBlockTitle={selectedBlock?.title}
               onDeselectBlock={() => setSelectedBlockId(null)}
             />
+          )}
+
+          {activeTab === "settings" && (
+            <div className="p-8 max-w-3xl w-full mx-auto space-y-6">
+              <div>
+                <h2 className="text-xl font-display font-bold text-[#1A1C20]">Access Barrier & Security</h2>
+                <p className="text-xs text-[#918355] mt-0.5">
+                  Configure access barriers for your creator profile and customize privacy for each individual content block.
+                </p>
+              </div>
+
+              {/* Profile-Level Access Barrier */}
+              <div className="p-5 rounded-2xl bg-white border border-[#E5E0D2] shadow-xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-[#1A1C20] flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
+                      <span>Profile Access Barrier</span>
+                    </h3>
+                    <p className="text-xs text-[#918355] mt-0.5">Control overall visibility of https://asoobi.bio/{profile.handle}</p>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                      profile.barrier === "protected"
+                        ? "bg-purple-100 text-purple-800 border border-purple-300"
+                        : profile.barrier === "private"
+                        ? "bg-neutral-200 text-neutral-800 border border-neutral-300"
+                        : "bg-emerald-50 text-emerald-800 border border-emerald-300"
+                    }`}
+                  >
+                    {profile.barrier || "Public"} Profile
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    {
+                      id: "public" as const,
+                      label: "Public",
+                      icon: <Globe className="w-4 h-4" />,
+                      tag: "Recommended",
+                      desc: "Visible to anyone with your link worldwide."
+                    },
+                    {
+                      id: "protected" as const,
+                      label: "Protected",
+                      icon: <ShieldCheck className="w-4 h-4" />,
+                      tag: "Passcode Required",
+                      desc: "Visitors must enter your master passcode to view."
+                    },
+                    {
+                      id: "private" as const,
+                      label: "Private",
+                      icon: <Lock className="w-4 h-4" />,
+                      tag: "Creator Only",
+                      desc: "Profile is unlisted and inaccessible to public visitors."
+                    },
+                  ].map((opt) => {
+                    const isSelected = (profile.barrier || "public") === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          setProfile((p) => ({
+                            ...p,
+                            barrier: opt.id,
+                            profilePassword: opt.id === "protected" ? (p.profilePassword || "ASOOBI2026") : p.profilePassword,
+                          }));
+                        }}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                          isSelected
+                            ? "bg-[#FAF9F5] border-[#D4AF37] shadow-sm ring-1 ring-[#D4AF37]"
+                            : "bg-white border-[#E5E0D2] hover:border-[#D4AF37]/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className={`p-2 rounded-lg ${isSelected ? "bg-[#D4AF37] text-white" : "bg-[#FAF9F5] text-[#918355]"}`}>
+                            {opt.icon}
+                          </div>
+                          {isSelected && <Check className="w-4 h-4 text-[#D4AF37]" />}
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-[#1A1C20]">{opt.label}</div>
+                          <div className="text-[10px] text-[#918355] mt-0.5">{opt.desc}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {profile.barrier === "protected" && (
+                  <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E5E0D2] space-y-2 animate-in fade-in">
+                    <label className="text-xs font-bold text-[#1A1C20] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <KeyRound className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        <span>Master Profile Passcode</span>
+                      </span>
+                      <span className="text-[10px] text-[#918355]">Visitors will be prompted for this code</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter profile password..."
+                      value={profile.profilePassword || ""}
+                      onChange={(e) => setProfile((p) => ({ ...p, profilePassword: e.target.value }))}
+                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-white text-[#1A1C20] font-mono focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Content Blocks Barrier Matrix */}
+              <div className="p-5 rounded-2xl bg-white border border-[#E5E0D2] shadow-xs space-y-3">
+                <div>
+                  <h3 className="text-sm font-bold text-[#1A1C20] flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#D4AF37]" />
+                    <span>Content Blocks Barrier Matrix</span>
+                  </h3>
+                  <p className="text-xs text-[#918355] mt-0.5">Quickly adjust access protection across individual blocks.</p>
+                </div>
+
+                <div className="divide-y divide-[#E5E0D2]/60">
+                  {profile.blocks.map((b) => {
+                    const currentBarrier = b.accessRules?.barrier || (b.accessRules?.isLocked ? "protected" : "public");
+                    return (
+                      <div key={b.id} className="py-3 flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-[#1A1C20] truncate">{b.title || "Untitled Block"}</span>
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F9F9F7] text-[#918355] border border-[#E5E0D2] shrink-0">
+                              {b.type.replace("_", " ")}
+                            </span>
+                          </div>
+                          {b.subtitle && <p className="text-[11px] text-[#918355] truncate max-w-sm mt-0.5">{b.subtitle}</p>}
+                        </div>
+
+                        {/* 3-way toggle buttons */}
+                        <div className="flex items-center gap-1 bg-[#FAF9F5] p-1 rounded-xl border border-[#E5E0D2] shrink-0">
+                          {(["public", "protected", "private"] as const).map((mode) => {
+                            const isCurrent = currentBarrier === mode;
+                            return (
+                              <button
+                                key={mode}
+                                type="button"
+                                onClick={() => {
+                                  updateBlock(b.id, {
+                                    accessRules: {
+                                      ...b.accessRules,
+                                      barrier: mode,
+                                      isLocked: mode === "protected",
+                                      password: mode === "protected" ? (b.accessRules?.password || "ASOOBI2026") : undefined,
+                                    },
+                                  } as any);
+                                }}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize transition-all cursor-pointer ${
+                                  isCurrent
+                                    ? mode === "protected"
+                                      ? "bg-purple-600 text-white shadow-2xs"
+                                      : mode === "private"
+                                      ? "bg-neutral-800 text-white shadow-2xs"
+                                      : "bg-[#D4AF37] text-white shadow-2xs"
+                                    : "text-[#918355] hover:text-[#1A1C20] hover:bg-white"
+                                }`}
+                              >
+                                {mode}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           )}
 
           {activeTab === "analytics" && (

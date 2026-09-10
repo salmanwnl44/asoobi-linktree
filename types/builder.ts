@@ -106,7 +106,10 @@ export interface BackgroundConfig {
   secondaryGradientColor?: string;
 }
 
+export type AccessBarrierType = 'public' | 'protected' | 'private';
+
 export interface LinkAccessRules {
+  barrier?: AccessBarrierType;
   isLocked: boolean;
   password?: string;
   scheduleEnabled: boolean;
@@ -307,6 +310,8 @@ export interface AsoobiProfileDocument {
   handle: string;
   isVerified: boolean;
   status: 'draft' | 'published';
+  barrier?: AccessBarrierType;
+  profilePassword?: string;
   meta: {
     title: string;
     bio: string;
@@ -315,6 +320,8 @@ export interface AsoobiProfileDocument {
     heroCoverUrl?: string;
     heroLayout: 'classic_minimal' | 'grand_editorial';
     location?: string;
+    email?: string;
+    phone?: string;
   };
   theme: ProfileThemeConfig;
   cardDesign?: CardDesignConfig;

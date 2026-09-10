@@ -6,6 +6,7 @@ export const INITIAL_PROFILE_DATA: AsoobiProfileDocument = {
   handle: "elena_vance",
   isVerified: true,
   status: "published",
+  barrier: "public",
   meta: {
     title: "Elena Vance",
     bio: "Digital Stylist & Luxury Creative Director. Curating aesthetics, high-fashion campaigns & editorial drops in Milan & Paris.",
@@ -14,6 +15,8 @@ export const INITIAL_PROFILE_DATA: AsoobiProfileDocument = {
     heroCoverUrl: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80",
     heroLayout: "grand_editorial",
     location: "Milan, Italy",
+    email: "elena.vance@asoobi.studio",
+    phone: "+39 02 8945 2201",
   },
   theme: {
     id: "asoobi_luxury_gold",
