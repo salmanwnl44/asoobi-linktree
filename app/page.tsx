@@ -51,6 +51,8 @@ import { INITIAL_PROFILE_DATA } from "@/lib/initialData";
 import { AsoobiProfileDocument, ProfileBlock, BlockType, CardDesignConfig } from "@/types/builder";
 import { UnifiedProfileRenderer } from "@/components/preview/UnifiedProfileRenderer";
 import { ThemeAndStylingPanel, ThemeSubTab } from "@/components/builder/ThemeAndStylingPanel";
+import { AnalyticsAndInsightsPanel } from "@/components/builder/AnalyticsAndInsightsPanel";
+import { PageTemplatesPanel } from "@/components/builder/PageTemplatesPanel";
 import { AsoobiDateTimePicker } from "@/components/ui/AsoobiDateTimePicker";
 import { ALL_CONTACT_TEMPLATES, ContactFormTemplate } from "@/lib/contactTemplates";
 import { REAL_BLOCK_TEMPLATES, PlatformBlockTemplate, CURATED_PLATFORM_THEMES } from "@/lib/blockTemplates";
@@ -99,7 +101,7 @@ const ALL_SOCIAL_PLATFORMS = [
 export default function StudioBuilderPage() {
   const [mounted, setMounted] = useState(false);
   const [profile, setProfile] = useState<AsoobiProfileDocument>(INITIAL_PROFILE_DATA);
-  const [activeTab, setActiveTab] = useState<"content" | "templates" | "profile" | "appearance" | "settings" | "analytics">("content");
+  const [activeTab, setActiveTab] = useState<"content" | "block_templates" | "templates" | "profile" | "appearance" | "settings" | "analytics">("content");
   const [appearanceSubTab, setAppearanceSubTab] = useState<ThemeSubTab>("all");
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "tablet" | "desktop">("mobile");
@@ -661,39 +663,57 @@ export default function StudioBuilderPage() {
 
         {/* Viewport & Publish Controls */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center bg-[#F9F9F7] p-1 rounded-xl border border-[#E5E0D2]">
-            <button
-              onClick={() => setPreviewDevice("mobile")}
-              className={`p-1.5 rounded-lg transition-colors ${previewDevice === "mobile" ? "bg-white shadow-sm text-[#D4AF37]" : "text-[#918355] hover:text-[#1A1C20]"}`}
-              title="Phone"
-            >
-              <Smartphone className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPreviewDevice("tablet")}
-              className={`p-1.5 rounded-lg transition-colors ${previewDevice === "tablet" ? "bg-white shadow-sm text-[#D4AF37]" : "text-[#918355] hover:text-[#1A1C20]"}`}
-              title="Tab"
-            >
-              <Tablet className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPreviewDevice("desktop")}
-              className={`p-1.5 rounded-lg transition-colors ${previewDevice === "desktop" ? "bg-white shadow-sm text-[#D4AF37]" : "text-[#918355] hover:text-[#1A1C20]"}`}
-              title="Laptop"
-            >
-              <Monitor className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                setFullScreenPreviewDevice(previewDevice);
-                setIsPublishedPreviewOpen(true);
-              }}
-              className="p-1.5 rounded-lg transition-colors text-[#918355] hover:text-[#1A1C20] border-l border-[#E5E0D2] ml-1 pl-1.5"
-              title="Full Screen Live Preview"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
-          </div>
+          {activeTab !== "analytics" ? (
+            <div className="flex items-center bg-[#F9F9F7] p-1 rounded-xl border border-[#E5E0D2]">
+              <button
+                onClick={() => setPreviewDevice("mobile")}
+                className={`p-1.5 rounded-lg transition-colors ${previewDevice === "mobile" ? "bg-white shadow-sm text-[#D4AF37]" : "text-[#918355] hover:text-[#1A1C20]"}`}
+                title="Phone"
+              >
+                <Smartphone className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPreviewDevice("tablet")}
+                className={`p-1.5 rounded-lg transition-colors ${previewDevice === "tablet" ? "bg-white shadow-sm text-[#D4AF37]" : "text-[#918355] hover:text-[#1A1C20]"}`}
+                title="Tab"
+              >
+                <Tablet className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPreviewDevice("desktop")}
+                className={`p-1.5 rounded-lg transition-colors ${previewDevice === "desktop" ? "bg-white shadow-sm text-[#D4AF37]" : "text-[#918355] hover:text-[#1A1C20]"}`}
+                title="Laptop"
+              >
+                <Monitor className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setFullScreenPreviewDevice(previewDevice);
+                  setIsPublishedPreviewOpen(true);
+                }}
+                className="p-1.5 rounded-lg transition-colors text-[#918355] hover:text-[#1A1C20] border-l border-[#E5E0D2] ml-1 pl-1.5"
+                title="Full Screen Live Preview"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FAF9F5] border border-[#E5E0D2] text-xs font-semibold text-[#918355]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Full Analytics Mode</span>
+              <button
+                onClick={() => {
+                  setFullScreenPreviewDevice("mobile");
+                  setIsPublishedPreviewOpen(true);
+                }}
+                className="ml-1 text-[#D4AF37] hover:underline font-bold flex items-center gap-1"
+                title="Open Live Preview in Modal"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Quick Preview</span>
+              </button>
+            </div>
+          )}
 
           <button 
             onClick={() => {
@@ -731,33 +751,53 @@ export default function StudioBuilderPage() {
           </div>
 
           <nav className="p-3 space-y-1.5">
-            <button
-              onClick={() => setActiveTab("content")}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === "content"
-                  ? "bg-[#D4AF37] text-white shadow-sm"
-                  : "text-[#1A1C20] hover:bg-[#F9F9F7]"
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              Content Blocks ({profile.blocks.length})
-            </button>
-
+            {/* 1. Curated Full-Page Templates */}
             <button
               onClick={() => setActiveTab("templates")}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "templates"
                   ? "bg-[#D4AF37] text-white shadow-sm"
                   : "text-[#1A1C20] hover:bg-[#F9F9F7]"
               }`}
             >
               <div className="flex items-center gap-3">
-                <BookOpen className="w-4 h-4" />
+                <Sparkles className="w-4 h-4" />
                 <span>Templates</span>
               </div>
               <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${activeTab === "templates" ? "bg-white/30 text-white" : "bg-[#D4AF37]/20 text-[#918355]"}`}>
                 Presets
               </span>
+            </button>
+
+            {/* 2. Renamed Block Section: Block Library */}
+            <button
+              onClick={() => setActiveTab("block_templates")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "block_templates"
+                  ? "bg-[#D4AF37] text-white shadow-sm"
+                  : "text-[#1A1C20] hover:bg-[#F9F9F7]"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <BookOpen className="w-4 h-4" />
+                <span>Block Library</span>
+              </div>
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${activeTab === "block_templates" ? "bg-white/30 text-white" : "bg-neutral-100 text-[#918355]"}`}>
+                29 Blocks
+              </span>
+            </button>
+
+            {/* 3. My Active Content Blocks */}
+            <button
+              onClick={() => setActiveTab("content")}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "content"
+                  ? "bg-[#D4AF37] text-white shadow-sm"
+                  : "text-[#1A1C20] hover:bg-[#F9F9F7]"
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>Content Blocks ({profile.blocks.length})</span>
             </button>
 
             <button
@@ -912,7 +952,7 @@ export default function StudioBuilderPage() {
         </aside>
 
         {/* Column 2: Center Dynamic Canvas & Inspector (Flexible 1fr) */}
-        <main className="flex-1 border-r border-[#E5E0D2] flex flex-col bg-[#F9F9F7] overflow-y-auto">
+        <main className={`flex-1 flex flex-col bg-[#F9F9F7] overflow-y-auto ${activeTab !== "analytics" ? "border-r border-[#E5E0D2]" : ""}`}>
           {activeTab === "content" && (
             <div className="p-8 max-w-2xl w-full mx-auto space-y-6">
               <div className="flex items-center justify-between">
@@ -2466,7 +2506,17 @@ export default function StudioBuilderPage() {
             </div>
           )}
 
+          {/* NEW Page Templates Section */}
           {activeTab === "templates" && (
+            <PageTemplatesPanel
+              profile={profile}
+              setProfile={setProfile}
+              onPreviewOpen={() => setIsPublishedPreviewOpen(true)}
+            />
+          )}
+
+          {/* Renamed Block Section: Block Library */}
+          {activeTab === "block_templates" && (
             <div className="p-8 max-w-3xl w-full mx-auto space-y-6">
               {copiedTemplateAlert && (
                 <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-semibold rounded-xl shadow-sm flex items-center gap-2 animate-in fade-in duration-200">
@@ -2580,15 +2630,34 @@ export default function StudioBuilderPage() {
                 });
 
                 return (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs text-[#918355] font-medium px-1">
-                      <span>Showing {filtered.length} interactive block templates</span>
-                      <span className="text-[11px] text-amber-900 bg-amber-100/60 px-2.5 py-0.5 rounded-md font-semibold">
-                        {selectedBlock ? `Ready to apply to: ${selectedBlock.title || 'Selected Block'}` : "Click to test or add to your page"}
-                      </span>
+                  <div className="space-y-4">
+                    {/* Status bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#918355] font-medium px-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-[#1A1C20]">{filtered.length} templates available</span>
+                        <span className="text-[#918355]">• Ready to use</span>
+                      </div>
+                      {selectedBlock ? (
+                        <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-3 py-1 rounded-xl text-xs font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+                          <span>Active Target: <strong className="text-[#1A1C20]">{selectedBlock.title || 'Selected Block'}</strong></span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBlockId(null)}
+                            className="text-[10px] text-amber-700 hover:text-black underline ml-1 font-bold cursor-pointer"
+                          >
+                            Deselect
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-[#918355]">
+                          Select a block in studio to replace it, or click Add to append
+                        </span>
+                      )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[620px] overflow-y-auto pr-1">
+                    {/* Template Cards Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-h-[640px] overflow-y-auto pr-1">
                       {filtered.map((tmpl) => {
                         const isExpanded = expandedPreviewId === tmpl.id;
                         const blockType = tmpl.block.type;
@@ -2596,52 +2665,52 @@ export default function StudioBuilderPage() {
                         return (
                           <div
                             key={tmpl.id}
-                            className="p-4.5 rounded-2xl border border-[#E5E0D2] bg-white hover:border-[#D4AF37] hover:shadow-md transition-all flex flex-col justify-between group space-y-3.5"
+                            className="p-5 rounded-2xl border border-[#E5E0D2] bg-white hover:border-[#D4AF37] hover:shadow-lg transition-all duration-200 flex flex-col justify-between group space-y-4 relative"
                           >
-                            <div className="space-y-3">
-                              {/* Card Header: Platform Icon + Name & Block Type */}
+                            <div className="space-y-3.5">
+                              {/* Card Header: Platform Badge + Type & Stats */}
                               <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2">
-                                  <PlatformOfficialBadge platform={tmpl.platform || tmpl.badge} size="md" shape="circle" />
-                                  <span className="text-xs font-bold text-[#1A1C20] tracking-tight">{tmpl.platform}</span>
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <PlatformOfficialBadge platform={tmpl.platform || tmpl.badge} size="sm" shape="squircle" />
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold text-[#1A1C20] truncate">{tmpl.platform}</div>
+                                    {tmpl.stats && (
+                                      <div className="text-[10px] text-[#918355] truncate font-medium">{tmpl.stats}</div>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                  {tmpl.stats && (
-                                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900">
-                                      {tmpl.stats}
-                                    </span>
-                                  )}
-                                  <span className="text-[9px] font-bold text-[#918355] uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#F9F9F7] border border-[#E5E0D2]">
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <span className="text-[9px] font-bold text-[#918355] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FAF9F5] border border-[#E5E0D2]">
                                     {tmpl.block.type.replace("_", " ")}
                                   </span>
                                 </div>
                               </div>
 
                               {/* Title & Description */}
-                              <div>
-                                <h3 className="text-xs font-bold text-[#1A1C20] group-hover:text-[#D4AF37] transition-colors">
+                              <div className="space-y-1">
+                                <h3 className="text-sm font-bold text-[#1A1C20] group-hover:text-[#D4AF37] transition-colors line-clamp-1 font-display">
                                   {tmpl.name}
                                 </h3>
-                                <p className="text-[11px] text-[#918355] mt-1 leading-relaxed">
+                                <p className="text-xs text-[#918355] leading-relaxed line-clamp-2">
                                   {tmpl.description}
                                 </p>
                               </div>
 
                               {/* Interactive Live Preview Box */}
-                              <div className="p-3 rounded-xl border border-[#E5E0D2] bg-[#FAF9F5] space-y-2">
+                              <div className="rounded-xl border border-[#E5E0D2] bg-[#FAF9F5] overflow-hidden">
                                 {/* Discount Code Interactive Widget */}
                                 {blockType === "discount_code" && (
-                                  <div className="space-y-1.5">
+                                  <div className="p-3 space-y-2">
                                     <div className="flex items-center justify-between">
-                                      <span className="text-[10px] font-bold text-[#1A1C20]">
+                                      <span className="text-xs font-bold text-[#1A1C20]">
                                         {(tmpl.block as any).brandName || "Exclusive Offer"}
                                       </span>
-                                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                                         {(tmpl.block as any).discountPercentageOrValue}
                                       </span>
                                     </div>
-                                    <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-dashed border-[#D4AF37]">
-                                      <span className="font-mono text-xs font-bold text-[#1A1C20] pl-1.5">
+                                    <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-dashed border-[#D4AF37] shadow-2xs">
+                                      <span className="font-mono text-xs font-bold text-[#1A1C20] pl-1 tracking-wider">
                                         {(tmpl.block as any).code}
                                       </span>
                                       <button
@@ -2651,8 +2720,8 @@ export default function StudioBuilderPage() {
                                           setCopiedPromoCode((tmpl.block as any).code);
                                           setTimeout(() => setCopiedPromoCode(null), 2000);
                                         }}
-                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-900 text-[10px] font-bold transition-all shadow-2xs"
-                                        title="Click to test copying code"
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF9F5] hover:bg-amber-100 text-amber-950 text-[10px] font-bold border border-[#E5E0D2] transition-all"
+                                        title="Click to copy code"
                                       >
                                         {copiedPromoCode === (tmpl.block as any).code ? (
                                           <>
@@ -2661,8 +2730,8 @@ export default function StudioBuilderPage() {
                                           </>
                                         ) : (
                                           <>
-                                            <Copy className="w-3 h-3" />
-                                            <span>Copy Code</span>
+                                            <Copy className="w-3 h-3 text-[#D4AF37]" />
+                                            <span>Copy</span>
                                           </>
                                         )}
                                       </button>
@@ -2670,50 +2739,56 @@ export default function StudioBuilderPage() {
                                   </div>
                                 )}
 
-                                {/* Featured Link with Cover & CTA */}
+                                {/* Featured Link with Cover Image & Overlay */}
                                 {blockType === "featured_link" && (
-                                  <div className="space-y-1.5">
-                                    {(tmpl.block as any).highlightCoverUrl && (
-                                      <div className="h-20 w-full rounded-lg overflow-hidden relative border border-[#E5E0D2]">
-                                        <img
-                                          src={(tmpl.block as any).highlightCoverUrl}
-                                          alt=""
-                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />
+                                  <div className="relative h-28 w-full overflow-hidden group/img">
+                                    {(tmpl.block as any).highlightCoverUrl ? (
+                                      <img
+                                        src={(tmpl.block as any).highlightCoverUrl}
+                                        alt=""
+                                        className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full bg-gradient-to-r from-amber-100 to-amber-200" />
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent flex flex-col justify-between p-2.5">
+                                      <div className="flex items-center justify-between">
                                         {(tmpl.block as any).badgeText && (
-                                          <span className="absolute top-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wider bg-black/80 text-white px-2 py-0.5 rounded backdrop-blur-xs">
+                                          <span className="text-[9px] font-bold uppercase tracking-wider bg-white/95 text-[#1A1C20] px-2 py-0.5 rounded-full shadow-xs backdrop-blur-xs">
                                             {(tmpl.block as any).badgeText}
                                           </span>
                                         )}
                                       </div>
-                                    )}
-                                    <div className="text-[11px] font-semibold text-[#1A1C20] truncate">
-                                      {tmpl.block.title}
-                                    </div>
-                                    <div className="flex items-center justify-between text-[10px] text-[#918355]">
-                                      <span className="truncate max-w-[160px]">{tmpl.block.subtitle}</span>
-                                      <span className="text-[#D4AF37] font-bold flex items-center gap-1 shrink-0">
-                                        {(tmpl.block as any).callToAction || "Explore"}
-                                        <ArrowRight className="w-3 h-3" />
-                                      </span>
+                                      <div className="space-y-0.5 text-white">
+                                        <div className="text-xs font-bold truncate drop-shadow-sm">
+                                          {tmpl.block.title}
+                                        </div>
+                                        <div className="flex items-center justify-between text-[10px] text-white/80">
+                                          <span className="truncate max-w-[150px]">{tmpl.block.subtitle}</span>
+                                          <span className="text-[#D4AF37] font-bold flex items-center gap-1 shrink-0 bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-xs">
+                                            {(tmpl.block as any).callToAction || "Explore"}
+                                            <ArrowRight className="w-2.5 h-2.5" />
+                                          </span>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
                                 )}
 
                                 {/* Collection / Shop Grid Preview */}
                                 {blockType === "collection" && (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-[10px] font-bold text-[#1A1C20]">
+                                  <div className="p-3 space-y-2">
+                                    <div className="flex items-center justify-between text-xs font-bold text-[#1A1C20]">
                                       <span>{tmpl.block.title}</span>
-                                      <span className="text-[9px] text-[#918355] font-normal">
+                                      <span className="text-[10px] text-[#918355] font-normal">
                                         {((tmpl.block as any).items?.length || 0)} Items
                                       </span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-1.5">
                                       {((tmpl.block as any).items || []).slice(0, 3).map((item: any) => (
-                                        <div key={item.id} className="bg-white rounded-lg p-1 border border-[#E5E0D2] text-center space-y-0.5">
+                                        <div key={item.id} className="bg-white rounded-lg p-1.5 border border-[#E5E0D2] text-center space-y-0.5 shadow-2xs">
                                           {item.thumbnailUrl && (
-                                            <img src={item.thumbnailUrl} alt="" className="w-full h-12 object-cover rounded" />
+                                            <img src={item.thumbnailUrl} alt="" className="w-full h-12 object-cover rounded-md" />
                                           )}
                                           <div className="text-[9px] font-bold text-[#1A1C20] truncate">{item.title}</div>
                                           <div className="text-[9px] font-bold text-[#D4AF37]">{item.price}</div>
@@ -2725,12 +2800,12 @@ export default function StudioBuilderPage() {
 
                                 {/* QR Code Preview */}
                                 {blockType === "qr_code" && (
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-lg bg-white border border-[#E5E0D2] flex items-center justify-center shrink-0 shadow-2xs">
+                                  <div className="p-3 flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-xl bg-white border border-[#E5E0D2] flex items-center justify-center shrink-0 shadow-2xs">
                                       <QrCode className="w-7 h-7 text-[#D4AF37]" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <div className="text-[11px] font-bold text-[#1A1C20] truncate">{tmpl.block.title}</div>
+                                      <div className="text-xs font-bold text-[#1A1C20] truncate">{tmpl.block.title}</div>
                                       <div className="text-[10px] text-[#918355] truncate">{(tmpl.block as any).downloadLabel || "Instant Scan"}</div>
                                     </div>
                                   </div>
@@ -2738,15 +2813,15 @@ export default function StudioBuilderPage() {
 
                                 {/* Contact Form Field Inspector */}
                                 {blockType === "contact_form" && (
-                                  <div className="space-y-1.5">
+                                  <div className="p-3 space-y-2">
                                     <div className="flex items-center justify-between">
-                                      <span className="text-[10px] font-bold text-[#1A1C20] truncate">
+                                      <span className="text-xs font-bold text-[#1A1C20] truncate">
                                         {tmpl.block.title}
                                       </span>
                                       <button
                                         type="button"
                                         onClick={() => setExpandedPreviewId(isExpanded ? null : tmpl.id)}
-                                        className="text-[9px] text-[#D4AF37] hover:underline font-bold"
+                                        className="text-[10px] text-[#D4AF37] hover:underline font-bold"
                                       >
                                         {isExpanded ? "Hide Fields" : "Inspect Fields"}
                                       </button>
@@ -2754,17 +2829,17 @@ export default function StudioBuilderPage() {
                                     <p className="text-[10px] text-[#918355] truncate">
                                       {tmpl.block.subtitle}
                                     </p>
-                                    <div className="flex flex-wrap gap-1 pt-1">
-                                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-white border border-[#E5E0D2] text-[#1A1C20]">
+                                    <div className="flex flex-wrap gap-1">
+                                      <span className="text-[9px] font-semibold px-2 py-0.5 rounded-md bg-white border border-[#E5E0D2] text-[#1A1C20]">
                                         + Email
                                       </span>
                                       {(tmpl.block as any).fields?.collectName && (
-                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white border border-[#E5E0D2] text-[#1A1C20]">
+                                        <span className="text-[9px] font-semibold px-2 py-0.5 rounded-md bg-white border border-[#E5E0D2] text-[#1A1C20]">
                                           + Name
                                         </span>
                                       )}
                                       {((tmpl.block as any).customFields || []).slice(0, 2).map((cf: any) => (
-                                        <span key={cf.id} className="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-medium">
+                                        <span key={cf.id} className="text-[9px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900">
                                           + {cf.label}
                                         </span>
                                       ))}
@@ -2774,12 +2849,12 @@ export default function StudioBuilderPage() {
                                     {isExpanded && (tmpl.block as any).customFields && (
                                       <div className="mt-2 pt-2 border-t border-[#E5E0D2] space-y-1.5 animate-in fade-in">
                                         <span className="text-[9px] font-bold uppercase tracking-wider text-[#918355] block">
-                                          Form Input Fields & Dropdowns:
+                                          Form Input Fields:
                                         </span>
                                         {((tmpl.block as any).customFields || []).map((cf: any) => (
-                                          <div key={cf.id} className="text-[10px] flex items-center justify-between p-1 bg-white rounded border border-[#E5E0D2]">
+                                          <div key={cf.id} className="text-[10px] flex items-center justify-between p-1.5 bg-white rounded-lg border border-[#E5E0D2]">
                                             <span className="font-semibold text-[#1A1C20]">{cf.label}</span>
-                                            <span className="text-[9px] text-gray-500 uppercase">{cf.type}</span>
+                                            <span className="text-[9px] text-gray-500 uppercase font-mono">{cf.type}</span>
                                           </div>
                                         ))}
                                       </div>
@@ -2789,13 +2864,13 @@ export default function StudioBuilderPage() {
 
                                 {/* Social Icons Row */}
                                 {blockType === "social_icons" && (
-                                  <div className="space-y-1.5">
-                                    <span className="text-[10px] font-bold text-[#1A1C20] block">
+                                  <div className="p-3 space-y-2">
+                                    <span className="text-xs font-bold text-[#1A1C20] block">
                                       {tmpl.block.title || "Social Links Bar"}
                                     </span>
                                     <div className="flex flex-wrap gap-1.5">
                                       {((tmpl.block as any).platformLinks || []).map((pl: any) => (
-                                        <span key={pl.platform} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-white border border-[#E5E0D2] shadow-2xs text-[#1A1C20]">
+                                        <span key={pl.platform} className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-white border border-[#E5E0D2] shadow-2xs text-[#1A1C20]">
                                           {getPlatformBadgeIcon(pl.platform, "w-3 h-3 shrink-0")}
                                           <span className="capitalize">{pl.platform}</span>
                                         </span>
@@ -2804,15 +2879,15 @@ export default function StudioBuilderPage() {
                                   </div>
                                 )}
 
-                                {/* Password Locked Standard Link */}
+                                {/* Standard Link */}
                                 {blockType === "standard_link" && (
-                                  <div className="space-y-1">
+                                  <div className="p-3 space-y-1">
                                     <div className="flex items-center justify-between">
-                                      <span className="text-[10px] font-bold text-[#1A1C20] truncate">
+                                      <span className="text-xs font-bold text-[#1A1C20] truncate">
                                         {tmpl.block.title}
                                       </span>
                                       {tmpl.block.accessRules?.isLocked && (
-                                        <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900 flex items-center gap-1">
+                                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 flex items-center gap-1">
                                           <Lock className="w-2.5 h-2.5" />
                                           Pass: {tmpl.block.accessRules.password}
                                         </span>
@@ -2823,41 +2898,47 @@ export default function StudioBuilderPage() {
                                         {tmpl.block.subtitle}
                                       </p>
                                     )}
+                                    {tmpl.block.url && (
+                                      <div className="text-[9px] text-neutral-400 font-mono truncate pt-0.5">
+                                        {tmpl.block.url.replace(/^https?:\/\//, "")}
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
                             </div>
 
-                            {/* Actions Row: Dual Buttons */}
-                            <div className="pt-2.5 border-t border-gray-100 flex items-center gap-2">
+                            {/* Actions Row: Dual Clearly Labeled Luxury Buttons */}
+                            <div className="pt-2 border-t border-[#E5E0D2]/60 flex items-center gap-2">
                               {selectedBlock ? (
                                 <>
                                   <button
                                     type="button"
                                     onClick={() => applyTemplateToSelectedBlock(tmpl)}
-                                    className="flex-1 py-2 px-3 rounded-xl bg-[#D4AF37] hover:bg-[#b8962e] text-[#1A1C20] text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5"
+                                    className="flex-1 py-2 px-3 rounded-xl bg-[#D4AF37] hover:bg-[#b8962e] text-[#1A1C20] text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 active:scale-[0.98] cursor-pointer"
                                     title={`Apply this template to your active block "${selectedBlock.title || 'Selected Block'}"`}
                                   >
                                     <Check className="w-3.5 h-3.5" />
-                                    <span>Apply to Active Block</span>
+                                    <span>Apply to Active</span>
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => addBlockTemplate(tmpl)}
-                                    className="p-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] hover:bg-white text-[#1A1C20] transition-colors"
+                                    className="py-2 px-3 rounded-xl border border-[#E5E0D2] bg-[#FAF9F5] hover:bg-white text-[#1A1C20] text-xs font-bold transition-colors flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
                                     title="Add as a new standalone block"
                                   >
-                                    <Plus className="w-4 h-4" />
+                                    <Plus className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                    <span>Add New</span>
                                   </button>
                                 </>
                               ) : (
                                 <button
                                   type="button"
                                   onClick={() => addBlockTemplate(tmpl)}
-                                  className="w-full py-2 px-3 rounded-xl bg-[#1A1C20] hover:bg-black text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5"
+                                  className="w-full py-2.5 px-4 rounded-xl bg-[#1A1C20] hover:bg-black text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 group/btn active:scale-[0.98] cursor-pointer"
                                 >
-                                  <Plus className="w-3.5 h-3.5" />
-                                  <span>Add to Content Blocks</span>
+                                  <Plus className="w-3.5 h-3.5 text-[#D4AF37] group-hover/btn:rotate-90 transition-transform duration-200" />
+                                  <span>Add Block to Page</span>
                                 </button>
                               )}
                             </div>
@@ -3058,156 +3139,150 @@ export default function StudioBuilderPage() {
           )}
 
           {activeTab === "analytics" && (
-            <div className="p-8 max-w-2xl w-full mx-auto space-y-6">
-              <div>
-                <h2 className="text-xl font-display font-bold">Profile Performance</h2>
-                <p className="text-xs text-[#918355] mt-0.5">Real-time engagement telemetry & link clicks.</p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-white border border-[#E5E0D2] shadow-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#918355]">Total Views</span>
-                  <div className="text-2xl font-bold font-display mt-1 text-[#1A1C20]">14,820</div>
-                  <span className="text-[10px] text-emerald-600 font-bold mt-1 block">↑ 18.4% vs last week</span>
-                </div>
-                <div className="p-4 rounded-2xl bg-white border border-[#E5E0D2] shadow-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#918355]">Link Clicks</span>
-                  <div className="text-2xl font-bold font-display mt-1 text-[#D4AF37]">4,192</div>
-                  <span className="text-[10px] text-emerald-600 font-bold mt-1 block">↑ 12.1% vs last week</span>
-                </div>
-                <div className="p-4 rounded-2xl bg-white border border-[#E5E0D2] shadow-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#918355]">Average CTR</span>
-                  <div className="text-2xl font-bold font-display mt-1 text-[#1A1C20]">28.3%</div>
-                  <span className="text-[10px] text-emerald-600 font-bold mt-1 block">↑ 2.4% vs last week</span>
-                </div>
-              </div>
-            </div>
+            <AnalyticsAndInsightsPanel profile={profile} />
           )}
         </main>
 
         {/* Column 3: Right-Side Real-Time Simulation Shell */}
-        <aside className="flex-1 bg-[#ECEAE3] flex flex-col items-center justify-start lg:justify-center p-6 shrink-0 relative overflow-y-auto">
-          <div className="text-[11px] font-bold tracking-widest uppercase text-[#918355] mb-4 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
-            <span>Preview</span>
-            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/80 border border-[#E5E0D2] text-[#1A1C20] shadow-xs">
-              {previewDevice === "mobile" 
-                ? "Phone" 
-                : previewDevice === "tablet" 
-                ? "Tab" 
-                : "Laptop"}
-            </span>
-          </div>
-
-          {/* Real Device Frame Showcase */}
-          {previewDevice === "mobile" && (
-            <div 
-              className="transition-all duration-300 shadow-2xl rounded-[52px] border-[10px] border-[#1A1C20] overflow-hidden relative flex flex-col w-[390px] h-[844px] max-h-[calc(100vh-140px)] aspect-[1170/2532] ring-1 ring-black/10 shrink-0"
-              style={{ backgroundColor: profile.theme.palette.background }}
-            >
-              {/* iPhone 16e Dynamic Island */}
-              <div className="w-28 h-6 bg-[#1A1C20] rounded-full absolute top-2.5 left-1/2 -translate-x-1/2 z-30 flex items-center justify-end px-3 border border-neutral-700/50">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#111] border border-neutral-700" />
-              </div>
-
-              {/* Status Bar Fake Header */}
-              <div 
-                className="h-10 w-full flex items-center justify-between px-7 pt-1 text-[11px] font-semibold select-none z-20 shrink-0 transition-colors duration-300"
-                style={{ 
-                  backgroundColor: profile.theme.palette.background,
-                  color: profile.theme.palette.primaryText,
-                }}
-              >
-                <span>9:41</span>
-                <div className="flex items-center gap-1.5 opacity-80">
-                  <span className="text-[10px]">5G</span>
-                  <div className="w-5 h-2.5 border border-current rounded-sm p-0.5 flex">
-                    <div className="h-full w-3/4 bg-current rounded-2xs" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Viewport Scroll Canvas */}
-              <div className="flex-1 w-full overflow-y-auto">
-                <UnifiedProfileRenderer profile={profile} isInteractive={true} />
-              </div>
-
-              {/* Home Indicator Bar */}
-              <div 
-                className="w-full py-2 flex items-center justify-center shrink-0 transition-colors duration-300"
-                style={{ backgroundColor: profile.theme.palette.background }}
-              >
-                <div 
-                  className="w-32 h-1 rounded-full transition-colors duration-300 opacity-40" 
-                  style={{ backgroundColor: profile.theme.palette.primaryText }}
-                />
-              </div>
+        {activeTab !== "analytics" && (
+          <aside className="flex-1 bg-[#ECEAE3] flex flex-col items-center justify-start lg:justify-center p-6 shrink-0 relative overflow-y-auto">
+            <div className="text-[11px] font-bold tracking-widest uppercase text-[#918355] mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+              <span>Preview</span>
+              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/80 border border-[#E5E0D2] text-[#1A1C20] shadow-xs">
+                {previewDevice === "mobile" 
+                  ? "Phone" 
+                  : previewDevice === "tablet" 
+                  ? "Tab" 
+                  : "Laptop"}
+              </span>
             </div>
-          )}
 
-          {previewDevice === "tablet" && (
-            <div 
-              className="transition-all duration-300 shadow-2xl rounded-[34px] border-[12px] border-[#1A1C20] overflow-hidden relative flex flex-col w-[620px] h-[465px] max-h-[calc(100vh-140px)] aspect-[4/3] ring-1 ring-black/10 shrink-0"
-              style={{ backgroundColor: profile.theme.palette.background }}
-            >
-              {/* iPad Pro 13" Camera Sensor */}
-              <div className="w-2.5 h-2.5 rounded-full bg-neutral-800 absolute top-2 left-1/2 -translate-x-1/2 z-30 border border-neutral-700" />
-
-              {/* Tablet Viewport Canvas */}
-              <div className="flex-1 w-full overflow-y-auto">
-                <UnifiedProfileRenderer profile={profile} isInteractive={true} />
-              </div>
-
-              {/* Home Bar */}
+            {/* Real Device Frame Showcase */}
+            {previewDevice === "mobile" && (
               <div 
-                className="w-full py-2 flex items-center justify-center shrink-0 transition-colors duration-300"
+                className="transition-all duration-300 shadow-2xl rounded-[52px] border-[10px] border-[#1A1C20] overflow-hidden relative flex flex-col w-[390px] h-[844px] max-h-[calc(100vh-140px)] aspect-[1170/2532] ring-1 ring-black/10 shrink-0"
                 style={{ backgroundColor: profile.theme.palette.background }}
               >
+                {/* iPhone 16e Dynamic Island */}
+                <div className="w-28 h-6 bg-[#1A1C20] rounded-full absolute top-2.5 left-1/2 -translate-x-1/2 z-30 flex items-center justify-end px-3 border border-neutral-700/50">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#111] border border-neutral-700" />
+                </div>
+
+                {/* Status Bar Fake Header */}
                 <div 
-                  className="w-44 h-1 rounded-full transition-colors duration-300 opacity-40" 
-                  style={{ backgroundColor: profile.theme.palette.primaryText }}
-                />
-              </div>
-            </div>
-          )}
-
-          {previewDevice === "desktop" && (
-            <div className="transition-all duration-300 shadow-2xl flex flex-col items-center shrink-0">
-              {/* MacBook Pro 16" Lid / Screen (3456 × 2234, ~1.55:1) */}
-              <div 
-                className="w-[680px] h-[440px] max-h-[calc(100vh-160px)] aspect-[3456/2234] rounded-t-2xl border-[10px] border-b-0 border-[#1F2124] relative flex flex-col shadow-xl overflow-hidden ring-1 ring-black/10 transition-colors duration-300"
-                style={{ backgroundColor: profile.theme.palette.background }}
-              >
-                {/* MacBook Pro Camera Notch */}
-                <div className="w-24 h-3.5 bg-[#1F2124] rounded-b-md absolute top-0 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-neutral-700 border border-neutral-600" />
-                </div>
-
-                {/* Browser Tab Bar */}
-                <div className="h-7 bg-[#E5E0D2]/60 border-b border-[#E5E0D2] flex items-center px-3 gap-2 shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                  </div>
-                  <div className="flex-1 max-w-xs mx-auto bg-white/80 rounded-md px-3 py-0.5 text-[10px] text-[#918355] truncate text-center border border-[#E5E0D2]">
-                    asoobi.com/{profile.handle}
+                  className="h-10 w-full flex items-center justify-between px-7 pt-1 text-[11px] font-semibold select-none z-20 shrink-0 transition-colors duration-300"
+                  style={{ 
+                    backgroundColor: profile.theme.palette.background,
+                    color: profile.theme.palette.primaryText,
+                  }}
+                >
+                  <span>9:41</span>
+                  <div className="flex items-center gap-1.5 opacity-80">
+                    <span className="text-[10px]">5G</span>
+                    <div className="w-5 h-2.5 border border-current rounded-sm p-0.5 flex">
+                      <div className="h-full w-3/4 bg-current rounded-2xs" />
+                    </div>
                   </div>
                 </div>
 
-                {/* Laptop Content Canvas */}
+                {/* Viewport Scroll Canvas */}
                 <div className="flex-1 w-full overflow-y-auto">
                   <UnifiedProfileRenderer profile={profile} isInteractive={true} />
                 </div>
-              </div>
 
-              {/* Laptop Base & Trackpad Lip */}
-              <div className="w-[760px] h-3.5 bg-[#C8C5BC] rounded-b-xl relative shadow-md flex items-start justify-center border-t border-[#AFA99E]">
-                <div className="w-24 h-1.5 bg-[#9E978C] rounded-b-md" />
+                {/* Home Indicator Bar */}
+                <div 
+                  className="w-full py-2 flex items-center justify-center shrink-0 transition-colors duration-300"
+                  style={{ backgroundColor: profile.theme.palette.background }}
+                >
+                  <div 
+                    className="w-32 h-1 rounded-full transition-colors duration-300 opacity-40" 
+                    style={{ backgroundColor: profile.theme.palette.primaryText }}
+                  />
+                </div>
               </div>
-            </div>
-          )}
-        </aside>
+            )}
+
+            {previewDevice === "tablet" && (
+              <div 
+                className="transition-all duration-300 shadow-2xl rounded-[36px] border-[12px] border-[#1A1C20] overflow-hidden relative flex flex-col w-[540px] h-[720px] max-h-[calc(100vh-140px)] aspect-[3/4] ring-1 ring-black/10 shrink-0"
+                style={{ backgroundColor: profile.theme.palette.background }}
+              >
+                {/* Tablet Camera Dot */}
+                <div className="w-2.5 h-2.5 bg-[#111] border border-neutral-700 rounded-full absolute top-2 left-1/2 -translate-x-1/2 z-30" />
+
+                {/* Status Bar */}
+                <div 
+                  className="h-8 w-full flex items-center justify-between px-6 pt-1 text-[11px] font-semibold select-none z-20 shrink-0 transition-colors duration-300"
+                  style={{ 
+                    backgroundColor: profile.theme.palette.background,
+                    color: profile.theme.palette.primaryText,
+                  }}
+                >
+                  <span>Wednesday, 9:41 AM</span>
+                  <div className="flex items-center gap-1.5 opacity-80">
+                    <span className="text-[10px]">100%</span>
+                    <div className="w-5 h-2.5 border border-current rounded-sm p-0.5 flex">
+                      <div className="h-full w-full bg-current rounded-2xs" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Scroll Canvas */}
+                <div className="flex-1 w-full overflow-y-auto px-4">
+                  <UnifiedProfileRenderer profile={profile} isInteractive={true} />
+                </div>
+
+                {/* Tablet Home Bar */}
+                <div 
+                  className="w-full py-2 flex items-center justify-center shrink-0 transition-colors duration-300"
+                  style={{ backgroundColor: profile.theme.palette.background }}
+                >
+                  <div 
+                    className="w-40 h-1 rounded-full transition-colors duration-300 opacity-40" 
+                    style={{ backgroundColor: profile.theme.palette.primaryText }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {previewDevice === "desktop" && (
+              <div className="flex flex-col items-center shrink-0 max-h-[calc(100vh-140px)]">
+                {/* Laptop Display Shell */}
+                <div 
+                  className="transition-all duration-300 shadow-2xl rounded-t-2xl border-[10px] border-[#1A1C20] overflow-hidden relative flex flex-col w-[680px] h-[460px] aspect-[16/10] ring-1 ring-black/10 shrink-0"
+                  style={{ backgroundColor: profile.theme.palette.background }}
+                >
+                  {/* Laptop Web Cam */}
+                  <div className="w-2 h-2 bg-[#111] border border-neutral-600 rounded-full absolute top-1.5 left-1/2 -translate-x-1/2 z-30" />
+
+                  {/* Browser Simulated Toolbar */}
+                  <div className="h-7 w-full bg-[#E5E0D2]/50 border-b border-[#E5E0D2] flex items-center px-3 gap-2 shrink-0 select-none">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
+                    </div>
+                    <div className="flex-1 max-w-xs mx-auto bg-white/80 rounded-md py-0.5 px-3 text-[10px] text-neutral-500 font-mono text-center truncate border border-[#E5E0D2]">
+                      asoobi.bio/{profile.handle}
+                    </div>
+                  </div>
+
+                  {/* Scroll Canvas */}
+                  <div className="flex-1 w-full overflow-y-auto px-8">
+                    <UnifiedProfileRenderer profile={profile} isInteractive={true} />
+                  </div>
+                </div>
+
+                {/* Laptop Base & Trackpad Lip */}
+                <div className="w-[760px] h-3.5 bg-[#C8C5BC] rounded-b-xl relative shadow-md flex items-start justify-center border-t border-[#AFA99E]">
+                  <div className="w-24 h-1.5 bg-[#9E978C] rounded-b-md" />
+                </div>
+              </div>
+            )}
+          </aside>
+        )}
       </div>
 
       {/* Full Screen Live Preview / Publish Modal */}
