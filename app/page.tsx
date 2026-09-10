@@ -51,6 +51,7 @@ import { INITIAL_PROFILE_DATA } from "@/lib/initialData";
 import { AsoobiProfileDocument, ProfileBlock, BlockType, CardDesignConfig } from "@/types/builder";
 import { UnifiedProfileRenderer } from "@/components/preview/UnifiedProfileRenderer";
 import { ThemeAndStylingPanel, ThemeSubTab } from "@/components/builder/ThemeAndStylingPanel";
+import { AsoobiDateTimePicker } from "@/components/ui/AsoobiDateTimePicker";
 import { ALL_CONTACT_TEMPLATES, ContactFormTemplate } from "@/lib/contactTemplates";
 import { REAL_BLOCK_TEMPLATES, PlatformBlockTemplate, CURATED_PLATFORM_THEMES } from "@/lib/blockTemplates";
 import { 
@@ -61,7 +62,7 @@ import {
   getCardWrapperStyle
 } from "@/lib/cardDesigns";
 import { 
-  getPlatformBadgeIcon, 
+  getPlatformBadgeIcon,
   PlatformOfficialBadge,
   InstagramIcon, 
   XTwitterIcon, 
@@ -73,6 +74,27 @@ import {
   ThreadsIcon,
   BlueVerifiedBadge
 } from "@/components/icons/PlatformIcons";
+
+const ALL_SOCIAL_PLATFORMS = [
+  { id: "instagram", name: "Instagram", defaultUrl: "https://instagram.com/" },
+  { id: "tiktok", name: "TikTok", defaultUrl: "https://tiktok.com/@" },
+  { id: "youtube", name: "YouTube", defaultUrl: "https://youtube.com/@" },
+  { id: "x", name: "X (Twitter)", defaultUrl: "https://x.com/" },
+  { id: "spotify", name: "Spotify", defaultUrl: "https://open.spotify.com/artist/" },
+  { id: "linkedin", name: "LinkedIn", defaultUrl: "https://linkedin.com/in/" },
+  { id: "threads", name: "Threads", defaultUrl: "https://threads.net/@" },
+  { id: "github", name: "GitHub", defaultUrl: "https://github.com/" },
+  { id: "discord", name: "Discord", defaultUrl: "https://discord.gg/" },
+  { id: "telegram", name: "Telegram", defaultUrl: "https://t.me/" },
+  { id: "whatsapp", name: "WhatsApp", defaultUrl: "https://wa.me/" },
+  { id: "email", name: "Email", defaultUrl: "mailto:contact@domain.com" },
+  { id: "facebook", name: "Facebook", defaultUrl: "https://facebook.com/" },
+  { id: "twitch", name: "Twitch", defaultUrl: "https://twitch.tv/" },
+  { id: "pinterest", name: "Pinterest", defaultUrl: "https://pinterest.com/" },
+  { id: "substack", name: "Substack", defaultUrl: "https://substack.com/@" },
+  { id: "apple", name: "Apple Music", defaultUrl: "https://music.apple.com/" },
+  { id: "amazon", name: "Amazon Shop", defaultUrl: "https://amazon.com/shop/" },
+];
 
 export default function StudioBuilderPage() {
   const [mounted, setMounted] = useState(false);
@@ -90,6 +112,7 @@ export default function StudioBuilderPage() {
   const [draggedBlockIndex, setDraggedBlockIndex] = useState<number | null>(null);
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState<number | null>(null);
   const [openTypeDropdownBlockId, setOpenTypeDropdownBlockId] = useState<string | null>(null);
+  const [openAddSocialDropdownBlockId, setOpenAddSocialDropdownBlockId] = useState<string | null>(null);
   const [isAvatarShapeDropdownOpen, setIsAvatarShapeDropdownOpen] = useState(false);
   const [archiveAlert, setArchiveAlert] = useState<string | null>(null);
   const [isPublishedPreviewOpen, setIsPublishedPreviewOpen] = useState(false);
@@ -1048,7 +1071,15 @@ export default function StudioBuilderPage() {
                                   <span>{formatRemainingTime(block.disappearAt)}</span>
                                 </span>
                               )}
-                              {(block.destinationUrl || (block as any).url) && (
+                              {block.type === "social_icons" && (block as any).platformLinks?.length > 0 ? (
+                                <span
+                                  className="text-[9px] text-[#918355] flex items-center gap-0.5 max-w-[120px] truncate font-medium"
+                                  title={`${(block as any).platformLinks.length} Direct Social Links`}
+                                >
+                                  <Share2 className="w-2.5 h-2.5 shrink-0 text-[#D4AF37]" />
+                                  <span>{(block as any).platformLinks.length} Social Links</span>
+                                </span>
+                              ) : (block.destinationUrl || (block as any).url) ? (
                                 <span
                                   className="text-[9px] text-[#918355] flex items-center gap-0.5 max-w-[110px] truncate"
                                   title={`Destination Link: ${block.destinationUrl || (block as any).url}`}
@@ -1056,7 +1087,7 @@ export default function StudioBuilderPage() {
                                   <LinkIcon className="w-2.5 h-2.5 shrink-0" />
                                   <span className="truncate">{(block.destinationUrl || (block as any).url)?.replace(/^https?:\/\//, "")}</span>
                                 </span>
-                              )}
+                              ) : null}
                               {!isArchived && (block.accessRules?.barrier === "protected" || block.accessRules?.isLocked) && (
                                 <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-50 border border-purple-300 text-purple-700 shrink-0 flex items-center gap-1" title={`Protected content • Password: ${block.accessRules?.password || 'Set'}`}>
                                   <ShieldCheck className="w-2.5 h-2.5 text-purple-600" />
@@ -1208,55 +1239,225 @@ export default function StudioBuilderPage() {
                             </div>
                           </div>
 
-                          {/* Common Fields: Title & Subtitle */}
+                          {/* Common Fields: Title & Subtitle (Hidden for social media blocks) */}
                           <div className="grid grid-cols-1 gap-3">
-                            <div>
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block mb-1">
-                                Block Title
-                              </label>
-                              <input
-                                type="text"
-                                value={block.title}
-                                onChange={(e) => updateBlock(block.id, { title: e.target.value })}
-                                className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block mb-1">
-                                Subtitle / Description
-                              </label>
-                              <input
-                                type="text"
-                                value={block.subtitle || ""}
-                                placeholder="Optional subtitle or description..."
-                                onChange={(e) => updateBlock(block.id, { subtitle: e.target.value })}
-                                className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                              />
-                            </div>
+                            {block.type !== "social_icons" && (
+                              <>
+                                <div>
+                                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block mb-1">
+                                    Block Title
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={block.title}
+                                    onChange={(e) => updateBlock(block.id, { title: e.target.value })}
+                                    className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] block mb-1">
+                                    Subtitle / Description
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={block.subtitle || ""}
+                                    placeholder="Optional subtitle or description..."
+                                    onChange={(e) => updateBlock(block.id, { subtitle: e.target.value })}
+                                    className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                                  />
+                                </div>
+                              </>
+                            )}
 
-                            {/* Universal Destination URL for EVERY block */}
-                            <div>
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] flex items-center justify-between mb-1">
-                                <span className="flex items-center gap-1.5">
-                                  <LinkIcon className="w-3 h-3 text-[#D4AF37]" />
-                                  <span>Destination Link (URL)</span>
-                                </span>
-                                <span className="text-[9px] text-[#918355] font-normal">Opens on tap</span>
-                              </label>
-                              <input
-                                type="url"
-                                placeholder="https://example.com/destination..."
-                                value={block.destinationUrl || (block as any).url || ""}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  updateBlock(block.id, {
-                                    destinationUrl: val,
-                                    ...("url" in block ? { url: val } : {}),
-                                  } as any);
-                                }}
-                                className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
-                              />
-                            </div>
+                          {/* Destination URL or Individual Social Links */}
+                          {block.type === "social_icons" ? (() => {
+                            const currentPlatforms = ((block as any).platformLinks || []).map((p: any) => p.platform);
+                            const availablePlatforms = ALL_SOCIAL_PLATFORMS.filter(
+                              (item) => !currentPlatforms.includes(item.id)
+                            );
+                            const isDropdownOpen = openAddSocialDropdownBlockId === block.id;
+
+                            return (
+                              <div className="space-y-3 p-3.5 rounded-xl border border-[#E5E0D2] bg-[#FAF9F5]">
+                                <div>
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] flex items-center gap-1.5">
+                                      <Share2 className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                      <span>Social Channels & Direct Links ({(block as any).platformLinks?.length || 0})</span>
+                                    </label>
+                                    <span className="text-[9px] text-[#D4AF37] font-semibold bg-amber-50 px-2 py-0.5 rounded-md border border-[#D4AF37]/30">
+                                      1 Link per Icon
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-[#918355] mt-0.5">
+                                    Each social icon below opens its own separate destination link when tapped.
+                                  </p>
+                                </div>
+
+                                {/* List of individual platform links */}
+                                <div className="space-y-2">
+                                  {((block as any).platformLinks || []).map((social: any, idx: number) => (
+                                    <div
+                                      key={`${social.platform}-${idx}`}
+                                      className="p-2.5 rounded-xl bg-white border border-[#E5E0D2] shadow-2xs space-y-1.5"
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <PlatformOfficialBadge platform={social.platform} size="sm" shape="squircle" />
+                                          <select
+                                            value={social.platform}
+                                            onChange={(e) => {
+                                              const newPlatform = e.target.value;
+                                              const updated = [...((block as any).platformLinks || [])];
+                                              const foundOpt = ALL_SOCIAL_PLATFORMS.find(p => p.id === newPlatform);
+                                              updated[idx] = { 
+                                                ...updated[idx], 
+                                                platform: newPlatform,
+                                                url: updated[idx].url || foundOpt?.defaultUrl || ""
+                                              };
+                                              updateBlock(block.id, { platformLinks: updated } as any);
+                                            }}
+                                            className="text-xs font-bold text-[#1A1C20] bg-transparent border border-[#E5E0D2] rounded-lg px-2 py-1 focus:outline-none focus:border-[#D4AF37] cursor-pointer capitalize"
+                                          >
+                                            <option value={social.platform}>
+                                              {ALL_SOCIAL_PLATFORMS.find(p => p.id === social.platform)?.name || social.platform}
+                                            </option>
+                                            {availablePlatforms.map((opt) => (
+                                              <option key={opt.id} value={opt.id}>
+                                                {opt.name}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const updated = ((block as any).platformLinks || []).filter((_: any, i: number) => i !== idx);
+                                            updateBlock(block.id, { platformLinks: updated } as any);
+                                          }}
+                                          className="p-1.5 rounded-lg text-neutral-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                          title="Remove this social icon"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+
+                                      <div className="relative flex items-center">
+                                        <input
+                                          type="url"
+                                          placeholder={`https://${social.platform === "x" ? "x.com" : social.platform === "email" ? "mailto:your@email.com" : `${social.platform}.com`}/...`}
+                                          value={social.url || ""}
+                                          onChange={(e) => {
+                                            const updated = [...((block as any).platformLinks || [])];
+                                            updated[idx] = { ...updated[idx], url: e.target.value };
+                                            updateBlock(block.id, { platformLinks: updated } as any);
+                                          }}
+                                          className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#E5E0D2] bg-[#F9F9F7] text-[#1A1C20] font-mono focus:outline-none focus:border-[#D4AF37]"
+                                        />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Add Social Platform Dropdown: Only shows unadded platforms */}
+                                <div className="relative pt-1">
+                                  <div className="flex items-center justify-between">
+                                    <button
+                                      type="button"
+                                      disabled={availablePlatforms.length === 0}
+                                      onClick={() => {
+                                        setOpenAddSocialDropdownBlockId(isDropdownOpen ? null : block.id);
+                                      }}
+                                      className={`text-xs font-bold flex items-center gap-1.5 py-1.5 px-3 rounded-xl transition-all shadow-2xs border cursor-pointer ${
+                                        availablePlatforms.length === 0
+                                          ? "bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed"
+                                          : isDropdownOpen
+                                          ? "bg-[#D4AF37] text-white border-[#D4AF37]"
+                                          : "bg-white text-[#1A1C20] hover:bg-[#FAF9F5] border-[#D4AF37]"
+                                      }`}
+                                    >
+                                      <Plus className="w-3.5 h-3.5 text-current" />
+                                      <span>
+                                        {availablePlatforms.length === 0 ? "All Channels Added" : "Add Another"}
+                                      </span>
+                                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${isDropdownOpen ? "rotate-180" : ""}`} />
+                                    </button>
+
+                                    <span className="text-[10px] text-[#918355]">
+                                      {availablePlatforms.length} channels available
+                                    </span>
+                                  </div>
+
+                                  {/* Self-Filtering Dropdown Menu */}
+                                  {isDropdownOpen && availablePlatforms.length > 0 && (
+                                    <>
+                                      <div
+                                        className="fixed inset-0 z-40"
+                                        onClick={() => setOpenAddSocialDropdownBlockId(null)}
+                                      />
+                                      <div className="absolute top-full left-0 mt-1.5 w-64 max-h-56 overflow-y-auto bg-white border border-[#E5E0D2] rounded-xl shadow-xl z-50 p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                                        <div className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#918355] border-b border-[#E5E0D2]/60">
+                                          Select Social Channel to Add
+                                        </div>
+                                        {availablePlatforms.map((opt) => (
+                                          <button
+                                            key={opt.id}
+                                            type="button"
+                                            onClick={() => {
+                                              const existing = (block as any).platformLinks || [];
+                                              const updated = [
+                                                ...existing,
+                                                {
+                                                  platform: opt.id,
+                                                  url: opt.defaultUrl,
+                                                  position: existing.length,
+                                                },
+                                              ];
+                                              updateBlock(block.id, { platformLinks: updated } as any);
+                                              setOpenAddSocialDropdownBlockId(null);
+                                            }}
+                                            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-[#FAF9F5] text-[#1A1C20] transition-colors group cursor-pointer text-left"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <PlatformOfficialBadge platform={opt.id} size="xs" shape="squircle" />
+                                              <span className="font-semibold text-xs text-[#1A1C20] group-hover:text-[#D4AF37]">
+                                                {opt.name}
+                                              </span>
+                                            </div>
+                                            <Plus className="w-3.5 h-3.5 text-neutral-400 group-hover:text-[#D4AF37]" />
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })() : (
+                              <div>
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-[#918355] flex items-center justify-between mb-1">
+                                  <span className="flex items-center gap-1.5">
+                                    <LinkIcon className="w-3 h-3 text-[#D4AF37]" />
+                                    <span>Destination Link (URL)</span>
+                                  </span>
+                                  <span className="text-[9px] text-[#918355] font-normal">Opens on tap</span>
+                                </label>
+                                <input
+                                  type="url"
+                                  placeholder="https://example.com/destination..."
+                                  value={block.destinationUrl || (block as any).url || ""}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    updateBlock(block.id, {
+                                      destinationUrl: val,
+                                      ...("url" in block ? { url: val } : {}),
+                                    } as any);
+                                  }}
+                                  className="w-full text-xs px-3 py-2 rounded-xl border border-[#E5E0D2] bg-[#F9F9F7] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                                />
+                              </div>
+                            )}
 
                             {/* Universal Disappearance Timer for EVERY block */}
                             <div className="p-3.5 rounded-xl border border-[#E5E0D2] bg-[#FAF9F5] space-y-2.5">
@@ -1332,30 +1533,17 @@ export default function StudioBuilderPage() {
                                     </span>
                                   </div>
 
-                                  {/* Custom Expiration Date & Time */}
+                                  {/* Custom Luxury Expiration Date & Time */}
                                   <div className="pt-0.5">
-                                    <label className="text-[10px] font-semibold text-[#918355] block mb-1">
-                                      Custom Expiration Date & Time
-                                    </label>
-                                    <input
-                                      type="datetime-local"
-                                      value={
-                                        block.disappearAt
-                                          ? new Date(new Date(block.disappearAt).getTime() - new Date().getTimezoneOffset() * 60000)
-                                              .toISOString()
-                                              .slice(0, 16)
-                                          : ""
-                                      }
-                                      onChange={(e) => {
-                                        if (e.target.value) {
-                                          const d = new Date(e.target.value);
-                                          updateBlock(block.id, {
-                                            disappearAt: d.toISOString(),
-                                            disappearDurationHours: undefined,
-                                          } as any);
-                                        }
+                                    <AsoobiDateTimePicker
+                                      label="Custom Expiration Date & Time"
+                                      value={block.disappearAt}
+                                      onChange={(isoString) => {
+                                        updateBlock(block.id, {
+                                          disappearAt: isoString,
+                                          disappearDurationHours: undefined,
+                                        } as any);
                                       }}
-                                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#E5E0D2] bg-white text-[#1A1C20] focus:outline-none focus:border-[#D4AF37]"
                                     />
                                   </div>
                                 </div>

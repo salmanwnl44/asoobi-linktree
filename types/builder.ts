@@ -198,7 +198,7 @@ export interface ContactFormBlock extends BaseBlock {
 export interface SocialIconsBlock extends BaseBlock {
   type: 'social_icons';
   platformLinks: Array<{
-    platform: 'instagram' | 'tiktok' | 'youtube' | 'x' | 'spotify' | 'linkedin' | 'email';
+    platform: 'instagram' | 'tiktok' | 'youtube' | 'x' | 'spotify' | 'linkedin' | 'email' | 'threads' | 'github' | 'discord' | 'telegram' | 'whatsapp' | string;
     url: string;
     position: number;
   }>;
