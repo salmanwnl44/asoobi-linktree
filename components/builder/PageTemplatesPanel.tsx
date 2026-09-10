@@ -207,7 +207,7 @@ export const PageTemplatesPanel: React.FC<PageTemplatesPanelProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs text-[#918355] px-1 font-medium pb-1">
           <span>Showing <strong className="text-[#1A1C20]">{filteredTemplates.length}</strong> of {FULL_PAGE_TEMPLATES.length} curated full-page designs</span>
           <span className="text-[11px] text-[#918355]/80">
-            Tip: <strong>Styles Only</strong> preserves your existing blocks
+            Click <strong>Apply</strong> to transform styling while keeping your blocks
           </span>
         </div>
 
@@ -229,13 +229,20 @@ export const PageTemplatesPanel: React.FC<PageTemplatesPanelProps> = ({
                 }`}
               >
                 {/* Clean Top Title Bar */}
-                <div className="px-4 py-3 flex items-center justify-between border-b border-[#E5E0D2]/70 bg-white">
-                  <h3 className="font-display font-bold text-sm text-[#1A1C20] group-hover:text-[#D4AF37] transition-colors truncate pr-2">
-                    {tmpl.name}
-                  </h3>
-                  <span className="text-[9px] font-bold text-[#918355] bg-[#FAF9F5] border border-[#E5E0D2] px-2.5 py-0.5 rounded-full shrink-0 tracking-wide uppercase">
-                    {tmpl.category}
-                  </span>
+                <div className="px-4 py-2.5 flex items-center justify-between border-b border-[#E5E0D2]/70 bg-white gap-2">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[9px] font-bold text-[#918355] tracking-wider uppercase block truncate">
+                      {tmpl.category}
+                    </span>
+                    <h3 className="font-display font-bold text-sm text-[#1A1C20] group-hover:text-[#D4AF37] transition-colors leading-snug truncate">
+                      {tmpl.name}
+                    </h3>
+                  </div>
+                  {isCurrentTheme && (
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+                      <Check className="w-2.5 h-2.5" /> Active
+                    </span>
+                  )}
                 </div>
 
                 {/* 1. VISUAL EDITORIAL MOCKUP HEADER */}
@@ -420,27 +427,28 @@ export const PageTemplatesPanel: React.FC<PageTemplatesPanelProps> = ({
                     </div>
                   </div>
 
-                  {/* 3. REFINED SINGLE-LINE CALL-TO-ACTION BUTTONS */}
-                  <div className="pt-1 flex items-center gap-2">
-                    {/* Primary Apply Button */}
-                    <button
-                      type="button"
-                      onClick={() => handleApplyFull(tmpl)}
-                      className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-xs bg-[#1A1C20] hover:bg-[#D4AF37] text-white hover:text-[#1A1C20] shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 group/btn"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] group-hover/btn:text-[#1A1C20] transition-colors shrink-0" />
-                      <span>Apply Template</span>
-                    </button>
-
-                    {/* Secondary Styles Only Button */}
+                  {/* 3. REFINED SINGLE APPLY BUTTON */}
+                  <div className="pt-1">
                     <button
                       type="button"
                       onClick={() => handleApplyStylesOnly(tmpl)}
-                      className="py-2.5 px-3.5 rounded-xl font-semibold text-xs bg-[#FAF9F5] hover:bg-[#F3EFE6] border border-[#E5E0D2] hover:border-[#D4AF37] text-[#1A1C20] transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
-                      title="Apply colors, fonts, buttons & card styling while keeping your existing blocks"
+                      className={`w-full py-2.5 px-4 rounded-xl font-semibold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs ${
+                        isCurrentTheme
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                          : "bg-[#1A1C20] hover:bg-[#D4AF37] text-white hover:text-[#1A1C20]"
+                      }`}
                     >
-                      <Wand2 className="w-3.5 h-3.5 text-[#918355] shrink-0" />
-                      <span>Styles Only</span>
+                      {isCurrentTheme ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Styles Applied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] group-hover:text-[#1A1C20]" />
+                          <span>Apply</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
